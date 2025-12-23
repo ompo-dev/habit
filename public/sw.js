@@ -1,6 +1,6 @@
 // Service Worker para PWA - Habit Builder
 // IMPORTANTE: Alterar a versão do cache quando houver atualizações significativas
-const CACHE_VERSION = "v1.3.5";
+const CACHE_VERSION = "v1.3.8";
 const CACHE_NAME = `habit-builder-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `habit-builder-runtime-${CACHE_VERSION}`;
 
