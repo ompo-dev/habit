@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { memo, useMemo } from "react"
 import { cn } from "@/lib/utils/cn"
 import type { HabitGroup } from "@/lib/types/habit"
 import { ChevronDown } from "lucide-react"
@@ -14,8 +15,12 @@ interface GroupHeaderProps {
   habitCount: number
 }
 
-export function GroupHeader({ group, isExpanded, onToggle, habitCount }: GroupHeaderProps) {
-  const IconComponent = (LucideIcons as any)[group.icon] as LucideIcon || LucideIcons.Folder
+export const GroupHeader = memo(function GroupHeader({ group, isExpanded, onToggle, habitCount }: GroupHeaderProps) {
+  // Memoiza IconComponent para evitar recálculos
+  const IconComponent = useMemo(
+    () => (LucideIcons as any)[group.icon] as LucideIcon || LucideIcons.Folder,
+    [group.icon]
+  )
 
   return (
     <motion.button
@@ -25,6 +30,10 @@ export function GroupHeader({ group, isExpanded, onToggle, habitCount }: GroupHe
       whileTap={{ scale: 0.98 }}
       onClick={onToggle}
       className="flex w-full items-center justify-between rounded-xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] px-4 py-3 transition-all hover:bg-white/[0.12] hover:border-white/[0.16] shadow-lg hover:shadow-xl"
+      aria-label={`${group.name}, ${habitCount} hábitos`}
+      aria-expanded={isExpanded}
+      aria-controls={`group-${group.id}-content`}
+      type="button"
     >
       <div className="flex items-center gap-3">
         <motion.div
@@ -35,7 +44,7 @@ export function GroupHeader({ group, isExpanded, onToggle, habitCount }: GroupHe
             borderColor: `${group.color}30`
           }}
         >
-          <IconComponent className="h-5 w-5" style={{ color: group.color }} />
+          <IconComponent className="h-5 w-5" style={{ color: group.color }} aria-hidden="true" />
         </motion.div>
         <div className="text-left">
           <h3 className="font-semibold text-white">{group.name}</h3>
@@ -46,8 +55,8 @@ export function GroupHeader({ group, isExpanded, onToggle, habitCount }: GroupHe
         animate={{ rotate: isExpanded ? 180 : 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <ChevronDown className="h-5 w-5 text-white/60" />
+        <ChevronDown className="h-5 w-5 text-white/60" aria-hidden="true" />
       </motion.div>
     </motion.button>
   )
-}
+})

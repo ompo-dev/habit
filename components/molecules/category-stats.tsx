@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils/cn"
 import { Heart, Activity, XCircle, CheckSquare } from "lucide-react"
 import type { HabitCategory } from "@/lib/types/habit"
+import { memo, useMemo } from "react"
 
 interface CategoryStatsProps {
   category: HabitCategory
@@ -38,10 +39,14 @@ const CATEGORY_CONFIG = {
   },
 }
 
-export function CategoryStats({ category, count, completed, total }: CategoryStatsProps) {
+export const CategoryStats = memo(function CategoryStats({ category, count, completed, total }: CategoryStatsProps) {
   const config = CATEGORY_CONFIG[category]
   const Icon = config.icon
-  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
+  // Memoiza cálculo de completionRate
+  const completionRate = useMemo(
+    () => total > 0 ? Math.round((completed / total) * 100) : 0,
+    [completed, total]
+  )
 
   return (
     <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)] hover:bg-white/8 transition-all">
@@ -50,7 +55,7 @@ export function CategoryStats({ category, count, completed, total }: CategorySta
           className="flex h-10 w-10 items-center justify-center rounded-xl"
           style={{ backgroundColor: config.bgColor }}
         >
-          <Icon className="h-5 w-5" style={{ color: config.color }} />
+          <Icon className="h-5 w-5" style={{ color: config.color }} aria-hidden="true" />
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-white">{config.label}</h3>
@@ -86,5 +91,5 @@ export function CategoryStats({ category, count, completed, total }: CategorySta
       </div>
     </div>
   )
-}
+})
 

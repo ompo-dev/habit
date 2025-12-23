@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, memo, useMemo } from "react"
 import { cn } from "@/lib/utils/cn"
 import { Play, Pause, RotateCcw } from "lucide-react"
 
@@ -11,14 +11,15 @@ interface TimerControlProps {
   onUpdate: (minutes: number) => void
 }
 
-export function TimerControl({ targetMinutes, currentMinutes, color, onUpdate }: TimerControlProps) {
+export const TimerControl = memo(function TimerControl({ targetMinutes, currentMinutes, color, onUpdate }: TimerControlProps) {
   const [isRunning, setIsRunning] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const totalSeconds = targetMinutes * 60
-  const elapsedSeconds = currentMinutes * 60 + seconds
-  const progress = Math.min((elapsedSeconds / totalSeconds) * 100, 100)
+  // Memoiza cálculos
+  const totalSeconds = useMemo(() => targetMinutes * 60, [targetMinutes])
+  const elapsedSeconds = useMemo(() => currentMinutes * 60 + seconds, [currentMinutes, seconds])
+  const progress = useMemo(() => Math.min((elapsedSeconds / totalSeconds) * 100, 100), [elapsedSeconds, totalSeconds])
   const isCompleted = elapsedSeconds >= totalSeconds
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export function TimerControl({ targetMinutes, currentMinutes, color, onUpdate }:
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-6xl font-bold text-white">{formatTime(elapsedSeconds)}</span>
+          <span className="text-6xl font-bold text-white" aria-label={`Tempo decorrido: ${formatTime(elapsedSeconds)}`}>{formatTime(elapsedSeconds)}</span>
           <span className="text-sm text-white/60 mt-2">
             Meta: {targetMinutes} {targetMinutes === 1 ? "minuto" : "minutos"}
           </span>
@@ -102,8 +103,10 @@ export function TimerControl({ targetMinutes, currentMinutes, color, onUpdate }:
             "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
           style={{ backgroundColor: color }}
+          aria-label={isRunning ? "Pausar timer" : "Iniciar timer"}
+          type="button"
         >
-          {isRunning ? <Pause className="h-8 w-8 text-white" /> : <Play className="h-8 w-8 text-white ml-1" />}
+          {isRunning ? <Pause className="h-8 w-8 text-white" aria-hidden="true" /> : <Play className="h-8 w-8 text-white ml-1" aria-hidden="true" />}
         </button>
 
         <button
@@ -114,10 +117,12 @@ export function TimerControl({ targetMinutes, currentMinutes, color, onUpdate }:
             "bg-white/10 text-white transition-all hover:bg-white/20 backdrop-blur-xl border border-white/10 shadow-lg",
             "disabled:opacity-30 disabled:cursor-not-allowed",
           )}
+          aria-label="Resetar timer"
+          type="button"
         >
-          <RotateCcw className="h-6 w-6" />
+          <RotateCcw className="h-6 w-6" aria-hidden="true" />
         </button>
       </div>
     </div>
   )
-}
+});

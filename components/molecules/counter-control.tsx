@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils/cn";
 import { Minus, Plus, FastForward, Undo2 } from "lucide-react";
+import { memo, useMemo } from "react";
 
 interface CounterControlProps {
   count: number;
@@ -13,7 +14,7 @@ interface CounterControlProps {
   onUndo: () => void;
 }
 
-export function CounterControl({
+export const CounterControl = memo(function CounterControl({
   count,
   targetCount,
   color,
@@ -22,7 +23,8 @@ export function CounterControl({
   onFastComplete,
   onUndo,
 }: CounterControlProps) {
-  const progress = Math.min((count / targetCount) * 100, 100);
+  // Memoiza cálculos
+  const progress = useMemo(() => Math.min((count / targetCount) * 100, 100), [count, targetCount]);
   const isCompleted = count >= targetCount;
 
   return (
@@ -37,8 +39,10 @@ export function CounterControl({
             "bg-white/10 text-white transition-all hover:bg-white/20 hover:scale-105 backdrop-blur-xl border border-white/10 shadow-lg",
             "disabled:opacity-30 disabled:cursor-not-allowed"
           )}
+          aria-label="Diminuir contador"
+          type="button"
         >
-          <Minus className="h-6 w-6" />
+          <Minus className="h-6 w-6" aria-hidden="true" />
         </button>
 
         {/* Círculo de progresso */}
@@ -68,7 +72,7 @@ export function CounterControl({
           </svg>
 
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-7xl font-bold text-white">{count}</span>
+            <span className="text-7xl font-bold text-white" aria-label={`${count} de ${targetCount}`}>{count}</span>
           </div>
         </div>
 
@@ -80,8 +84,10 @@ export function CounterControl({
             "transition-all hover:scale-110"
           )}
           style={{ backgroundColor: color }}
+          aria-label="Aumentar contador"
+          type="button"
         >
-          <Plus className="h-6 w-6 text-white" />
+          <Plus className="h-6 w-6 text-white" aria-hidden="true" />
         </button>
       </div>
 
@@ -93,8 +99,10 @@ export function CounterControl({
             "transition-all hover:scale-110"
           )}
           style={{ backgroundColor: color + "40" }}
+          aria-label="Completar rapidamente"
+          type="button"
         >
-          <FastForward className="h-6 w-6" style={{ color }} />
+          <FastForward className="h-6 w-6" style={{ color }} aria-hidden="true" />
         </button>
 
         <button
@@ -105,10 +113,12 @@ export function CounterControl({
             "bg-white/10 text-white transition-all hover:bg-white/20 backdrop-blur-xl border border-white/10 shadow-lg",
             "disabled:opacity-30 disabled:cursor-not-allowed"
           )}
+          aria-label="Desfazer"
+          type="button"
         >
-          <Undo2 className="h-6 w-6" />
+          <Undo2 className="h-6 w-6" aria-hidden="true" />
         </button>
       </div>
     </div>
   );
-}
+});

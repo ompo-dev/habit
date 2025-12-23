@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreVertical, Trash2, Edit, BarChart3, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { HabitWithProgress } from "@/lib/types/habit";
 
-export function HabitModal() {
+export const HabitModal = memo(function HabitModal() {
   const { selectedDate } = useUIStore();
   const { selectedHabitId, closeHabit, isOpen } = useSelectedHabit();
   const { getHabitWithProgress, markComplete, undoComplete, deleteHabit } =
@@ -42,8 +42,11 @@ export function HabitModal() {
 
   if (!isOpen || !habit) return null;
 
-  const IconComponent =
-    ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle;
+  // Memoiza IconComponent para evitar recálculos
+  const IconComponent = useMemo(
+    () => ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle,
+    [habit.icon]
+  );
 
   const handleClose = () => {
     closeHabit();
@@ -131,6 +134,10 @@ export function HabitModal() {
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
           onClick={handleClose}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="habit-modal-title"
+          aria-describedby="habit-modal-description"
         >
           <motion.div
             initial={{ opacity: 0 }}
@@ -183,10 +190,10 @@ export function HabitModal() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <h2 className="text-2xl font-bold text-white">
+                  <h2 id="habit-modal-title" className="text-2xl font-bold text-white">
                     {habit.title}
                   </h2>
-                  <p className="text-sm text-white/60">{getSubtitle()}</p>
+                  <p id="habit-modal-description" className="text-sm text-white/60">{getSubtitle()}</p>
                 </motion.div>
               </div>
 
@@ -202,8 +209,12 @@ export function HabitModal() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg"
+                      aria-label="Menu de opções do hábito"
+                      aria-haspopup="true"
+                      aria-expanded={isMenuOpen}
+                      type="button"
                     >
-                      <MoreVertical className="h-5 w-5" />
+                      <MoreVertical className="h-5 w-5" aria-hidden="true" />
                     </motion.button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -216,15 +227,17 @@ export function HabitModal() {
                         setIsMenuOpen(false);
                       }}
                       className="flex items-center gap-2 text-white hover:bg-white/10 cursor-pointer"
+                      aria-label="Editar hábito"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4" aria-hidden="true" />
                       <span>Editar</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center gap-2 text-white hover:bg-white/10 cursor-pointer"
+                      aria-label="Ver estatísticas do hábito"
                     >
-                      <BarChart3 className="h-4 w-4" />
+                      <BarChart3 className="h-4 w-4" aria-hidden="true" />
                       <span>Estatísticas</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-white/10" />
@@ -234,8 +247,9 @@ export function HabitModal() {
                         handleDelete();
                       }}
                       className="flex items-center gap-2 text-red-500 hover:bg-red-500/10 cursor-pointer"
+                      aria-label="Excluir hábito"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                       <span>Excluir</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -258,8 +272,9 @@ export function HabitModal() {
                   <Badge
                     variant="warning"
                     className="mb-2 backdrop-blur-xl shadow-lg"
+                    aria-label={`Sequência de ${habit.streak} dias`}
                   >
-                    🔥 {habit.streak} dias de sequência
+                    <span aria-hidden="true">🔥</span> {habit.streak} dias de sequência
                   </Badge>
                 </motion.div>
               )}
@@ -285,4 +300,4 @@ export function HabitModal() {
       )}
     </AnimatePresence>
   );
-}
+});

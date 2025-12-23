@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Play, Pause, RotateCcw, Coffee } from "lucide-react";
 
@@ -15,7 +15,7 @@ interface PomodoroControlProps {
 
 type PomodoroPhase = "work" | "break";
 
-export function PomodoroControl({
+export const PomodoroControl = memo(function PomodoroControl({
   targetSessions,
   currentSessions,
   workMinutes,
@@ -28,9 +28,10 @@ export function PomodoroControl({
   const [timeLeft, setTimeLeft] = useState(workMinutes * 60);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentPhaseMinutes = phase === "work" ? workMinutes : breakMinutes;
-  const totalSeconds = currentPhaseMinutes * 60;
-  const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
+  // Memoiza cálculos
+  const currentPhaseMinutes = useMemo(() => phase === "work" ? workMinutes : breakMinutes, [phase, workMinutes, breakMinutes]);
+  const totalSeconds = useMemo(() => currentPhaseMinutes * 60, [currentPhaseMinutes]);
+  const progress = useMemo(() => ((totalSeconds - timeLeft) / totalSeconds) * 100, [totalSeconds, timeLeft]);
   const isCompleted = currentSessions >= targetSessions;
 
   useEffect(() => {
@@ -115,14 +116,14 @@ export function PomodoroControl({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2" aria-hidden="true">
             {phase === "work" ? (
               <span className="text-2xl">💼</span>
             ) : (
               <Coffee className="h-6 w-6 text-green-500" />
             )}
           </div>
-          <span className="text-6xl font-bold text-white">
+          <span className="text-6xl font-bold text-white" aria-label={`Tempo restante: ${formatTime(timeLeft)}`}>
             {formatTime(timeLeft)}
           </span>
           <span className="text-sm text-white/60 mt-2">
@@ -142,11 +143,13 @@ export function PomodoroControl({
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
           style={{ backgroundColor: phase === "work" ? color : "#10B981" }}
+          aria-label={isRunning ? "Pausar pomodoro" : "Iniciar pomodoro"}
+          type="button"
         >
           {isRunning ? (
-            <Pause className="h-8 w-8 text-white" />
+            <Pause className="h-8 w-8 text-white" aria-hidden="true" />
           ) : (
-            <Play className="h-8 w-8 text-white ml-1" />
+            <Play className="h-8 w-8 text-white ml-1" aria-hidden="true" />
           )}
         </button>
 
@@ -156,8 +159,10 @@ export function PomodoroControl({
             "flex h-14 w-14 items-center justify-center rounded-full",
             "bg-white/10 text-white transition-all hover:bg-white/20 backdrop-blur-xl border border-white/10 shadow-lg"
           )}
+          aria-label="Resetar pomodoro"
+          type="button"
         >
-          <RotateCcw className="h-6 w-6" />
+          <RotateCcw className="h-6 w-6" aria-hidden="true" />
         </button>
       </div>
       <div className="flex items-center gap-2">
@@ -173,4 +178,4 @@ export function PomodoroControl({
       </div>
     </div>
   );
-}
+});

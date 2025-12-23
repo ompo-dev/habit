@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 import type { ReactNode } from "react";
+import { memo } from "react";
 
 interface StatCardProps {
   icon: ReactNode;
@@ -13,7 +14,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
   icon,
   label,
   value,
@@ -30,7 +31,7 @@ export function StatCard({
       )}
     >
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/8 backdrop-blur-lg border border-white/12">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/8 backdrop-blur-lg border border-white/12" aria-hidden="true">
           {icon}
         </div>
         {trend && (
@@ -47,9 +48,9 @@ export function StatCard({
         )}
       </div>
       <div className="mt-3">
-        <div className="text-3xl font-bold text-white">{value}</div>
+        <div className="text-3xl font-bold text-white" aria-label={`${value} ${label}`}>{value}</div>
         <div className="mt-1 text-sm text-white/60">{label}</div>
       </div>
     </div>
   );
-}
+});
