@@ -353,7 +353,6 @@ Versão do Next.js: ${process.env.NEXT_PUBLIC_NEXTJS_VERSION || "N/A"}
                 ) : (
                   <>
                     <Copy className="h-4 w-4" />
-                    Copiar Relatório
                   </>
                 )}
               </button>
@@ -368,7 +367,6 @@ Versão do Next.js: ${process.env.NEXT_PUBLIC_NEXTJS_VERSION || "N/A"}
                 className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-all"
               >
                 <RefreshCw className="h-4 w-4" />
-                Recarregar Página
               </button>
             </div>
           </motion.div>

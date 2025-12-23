@@ -85,23 +85,27 @@ export function GroupTemplatesModal() {
 
   // Handler para drag - fecha o modal quando arrastar para baixo
   // useCallback garante que a função seja estável e não seja recriada
+  // SEMPRE definido, mesmo quando o modal está fechado, para evitar erros
   const handleDragEnd = useCallback(
     (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      // Verifica se o componente ainda está montado
-      if (!isMountedRef.current) return;
+      // Verifica se o componente ainda está montado E se o modal ainda está aberto
+      if (!isMountedRef.current || !isGroupTemplatesModalOpen) return;
 
       // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
       if (info.offset.y > 100 || info.velocity.y > 500) {
         handleClose();
       }
     },
-    [handleClose]
+    [handleClose, isGroupTemplatesModalOpen]
   );
 
-  if (!isGroupTemplatesModalOpen) return null;
+  // Se o modal não estiver aberto, ainda renderiza mas escondido para manter as funções no escopo
+  if (!isGroupTemplatesModalOpen) {
+    return null;
+  }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isGroupTemplatesModalOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -127,7 +131,7 @@ export function GroupTemplatesModal() {
               damping: 30,
               stiffness: 300,
             }}
-            drag="y"
+            drag={isGroupTemplatesModalOpen ? "y" : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.2 }}
             onDragEnd={handleDragEnd}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -75,9 +75,18 @@ export function GroupCreationModal() {
   const [name, setName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("Target");
   const [selectedColor, setSelectedColor] = useState("#3b82f6");
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
+      isMountedRef.current = true;
       if (editingGroupId) {
         const group = getGroupById(editingGroupId);
         if (group) {
@@ -101,6 +110,12 @@ export function GroupCreationModal() {
           setSelectedColor("#3b82f6");
         }
       }
+    } else {
+      // Delay para garantir que o drag termine antes de desmontar
+      const timeout = setTimeout(() => {
+        isMountedRef.current = false;
+      }, 300);
+      return () => clearTimeout(timeout);
     }
   }, [editingGroupId, isOpen, getGroupById]);
 
@@ -130,6 +145,22 @@ export function GroupCreationModal() {
     handleCloseWithCleanup();
   };
 
+  // Handler para drag - fecha o modal quando arrastar para baixo
+  // useCallback garante que a função seja estável e não seja recriada
+  // SEMPRE definido, mesmo quando o modal está fechado, para evitar erros
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      // Verifica se o componente ainda está montado E se o modal ainda está aberto
+      if (!isMountedRef.current || !isOpen) return;
+
+      // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
+      if (info.offset.y > 100 || info.velocity.y > 500) {
+        handleCloseWithCleanup();
+      }
+    },
+    [handleCloseWithCleanup, isOpen]
+  );
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -157,7 +188,7 @@ export function GroupCreationModal() {
               damping: 30,
               stiffness: 300,
             }}
-            drag="y"
+            drag={isOpen ? "y" : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.2 }}
             onDragEnd={handleDragEnd}
