@@ -29,11 +29,9 @@ export const HabitStatsList = memo(function HabitStatsList() {
         const habit = habits.find((h) => h.id === stat.habitId);
         if (!habit) return null;
 
-        // Memoiza IconComponent para cada item
-        const IconComponent = useMemo(
-          () => ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle,
-          [habit.icon]
-        );
+        // Calcula IconComponent diretamente (não pode usar hooks dentro de map)
+        const IconComponent =
+          ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle;
 
         return (
           <div
