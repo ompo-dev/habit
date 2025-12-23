@@ -737,6 +737,9 @@ export const useHabitsStore = create<HabitsState>()(
           groups: mockData.groups || [],
           skipAutoLoad: false, // Reseta a flag ao carregar dados manualmente
         });
+
+        // Marca que os dados mock foram carregados (permite recarregar manualmente depois)
+        localStorage.setItem("habits-mock-data-loaded", "true");
       },
 
       importData: (data) => {
@@ -789,6 +792,11 @@ export const useHabitsStore = create<HabitsState>()(
 
         // Limpa o localStorage específico do store
         localStorage.removeItem("habits-storage");
+
+        // NÃO remove a flag "habits-mock-data-loaded" porque ela indica que os dados mock
+        // já foram carregados alguma vez. Isso previne que os dados mock sejam carregados
+        // automaticamente novamente após limpar. Eles só podem ser carregados manualmente
+        // através do botão "Carregar dados de exemplo" nas configurações.
 
         // Limpa sessionStorage também
         sessionStorage.clear();

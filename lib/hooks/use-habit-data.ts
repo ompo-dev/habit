@@ -5,26 +5,35 @@ import { useHabitsStore } from "@/lib/stores/habits-store";
  * Hook para carregar e processar dados de hábitos do JSON mock
  * Transforma os dados brutos em objetos tipados e inicializa o store
  */
+const MOCK_DATA_LOADED_KEY = "habits-mock-data-loaded";
+
 export function useHabitData() {
-  const { habits, loadMockData, skipAutoLoad } = useHabitsStore();
+  const { habits, loadMockData } = useHabitsStore();
 
   useEffect(() => {
     // Aguarda um tick para garantir que o persist hydrate já aconteceu
     const timer = setTimeout(() => {
-      // Carrega dados mock apenas se não houver hábitos E não estiver marcado para pular
-      // Isso evita recarregar dados após limpeza intencional
-      if (habits.length === 0 && !skipAutoLoad) {
-        console.log("🔄 Carregando dados mock...");
-        loadMockData();
+      // Verifica se os dados mock já foram carregados alguma vez
+      const mockDataAlreadyLoaded =
+        localStorage.getItem(MOCK_DATA_LOADED_KEY) === "true";
+
+      // Carrega dados mock apenas se:
+      // 1. Não houver hábitos
+      // 2. Os dados mock NÃO foram carregados anteriormente (primeira vez)
+      if (habits.length === 0 && !mockDataAlreadyLoaded) {
+        console.log("🔄 Carregando dados mock pela primeira vez...");
+        loadMockData(); // A função loadMockData já define a flag no localStorage
       } else if (habits.length > 0) {
         console.log(`✅ ${habits.length} hábitos já carregados`);
       } else {
-        console.log("⏭️ Pulando carregamento automático (dados foram limpos)");
+        console.log(
+          "⏭️ Pulando carregamento automático (dados mock já foram carregados ou foram limpos)"
+        );
       }
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [habits.length, loadMockData, skipAutoLoad]);
+  }, [habits.length, loadMockData]);
 
   return {
     isLoaded: habits.length > 0,
