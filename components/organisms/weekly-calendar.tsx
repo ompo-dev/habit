@@ -3,8 +3,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import {
-  getWeekDays,
-  getStartOfWeek,
   isSameDay,
   getWeekdayShort,
   getDayOfMonth,
@@ -19,23 +17,20 @@ export function WeeklyCalendar() {
   const isHydrated = useHydration();
   const { selectedDay, setSelectedDay } = useSelectedDay();
   const { habits, progress } = useHabitsStore();
-  const [weekStart, setWeekStart] = useState(() => {
-    if (typeof window === "undefined") return new Date();
-    return getStartOfWeek(selectedDay);
-  });
 
-  // Atualiza weekStart quando selectedDay muda
-  useEffect(() => {
-    const newWeekStart = getStartOfWeek(selectedDay);
-    setWeekStart(newWeekStart);
-  }, [selectedDay]);
-
+  // Calcula 5 dias sempre com o dia atual centralizado
   const weekDays = useMemo(() => {
     if (!isHydrated) return [];
-    return getWeekDays(weekStart);
-  }, [weekStart, isHydrated]);
 
-  const today = new Date();
+    const days: Date[] = [];
+    // 2 dias antes, dia atual, 2 dias depois = 5 dias total
+    for (let i = -2; i <= 2; i++) {
+      const date = new Date(selectedDay);
+      date.setDate(date.getDate() + i);
+      days.push(date);
+    }
+    return days;
+  }, [selectedDay, isHydrated]);
 
   const getDayCompletionData = (day: Date) => {
     const dateString = day.toISOString().split("T")[0];
@@ -64,22 +59,24 @@ export function WeeklyCalendar() {
   };
 
   const goToPreviousWeek = () => {
-    const newStart = new Date(weekStart);
-    newStart.setDate(newStart.getDate() - 7);
-    setWeekStart(newStart);
+    // Avança 5 dias para trás (mostra os 5 dias anteriores)
+    const newDay = new Date(selectedDay);
+    newDay.setDate(newDay.getDate() - 5);
+    setSelectedDay(newDay);
   };
 
   const goToNextWeek = () => {
-    const newStart = new Date(weekStart);
-    newStart.setDate(newStart.getDate() + 7);
-    setWeekStart(newStart);
+    // Avança 5 dias para frente (mostra os próximos 5 dias)
+    const newDay = new Date(selectedDay);
+    newDay.setDate(newDay.getDate() + 5);
+    setSelectedDay(newDay);
   };
 
   if (!isHydrated) {
     return (
       <div className="flex items-center justify-between gap-1 sm:gap-3">
         <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2">
-          {[...Array(7)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <div
               key={i}
               className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white/5 animate-pulse"
