@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { X, Search, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -25,20 +25,31 @@ export function TemplatesModal() {
     HabitCategory | "todos"
   >("todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isTemplatesModalOpen || isAdding) {
       document.body.style.overflow = "hidden";
+      isMountedRef.current = true;
     } else {
       document.body.style.overflow = "unset";
+      // Delay para garantir que o drag termine antes de desmontar
+      setTimeout(() => {
+        isMountedRef.current = false;
+      }, 300);
     }
 
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [isTemplatesModalOpen, isAdding]);
-
-  if (!isTemplatesModalOpen && !isAdding) return null;
 
   const filteredTemplates = HABIT_TEMPLATES.filter((template) => {
     const matchesCategory =
@@ -49,34 +60,61 @@ export function TemplatesModal() {
     return matchesCategory && matchesSearch;
   });
 
-  const handleSelectTemplate = (template: (typeof HABIT_TEMPLATES)[0]) => {
-    // Salva template no sessionStorage para o modal de criação pegar
-    sessionStorage.setItem("selectedHabitTemplate", JSON.stringify(template));
-    openCreationModal();
-  };
+  const handleSelectTemplate = useCallback(
+    (template: (typeof HABIT_TEMPLATES)[0]) => {
+      // Salva template no sessionStorage para o modal de criação pegar
+      sessionStorage.setItem("selectedHabitTemplate", JSON.stringify(template));
+      // Delay pequeno para garantir que o drag termine
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          openCreationModal();
+        }
+      }, 50);
+    },
+    [openCreationModal]
+  );
 
-  const handleCreateCustom = () => {
+  const handleCreateCustom = useCallback(() => {
     // Remove template do sessionStorage
     sessionStorage.removeItem("selectedHabitTemplate");
-    openCreationModal();
-  };
+    // Delay pequeno para garantir que o drag termine
+    setTimeout(() => {
+      if (isMountedRef.current) {
+        openCreationModal();
+      }
+    }, 50);
+  }, [openCreationModal]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     closeTemplatesModal();
     setSearchQuery("");
     // Cancela o modo de adição ao grupo
     if (isAdding) {
       cancelAdding();
     }
-  };
+  }, [closeTemplatesModal, isAdding, cancelAdding]);
 
   // Handler para drag - fecha o modal quando arrastar para baixo
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
-    if (info.offset.y > 100 || info.velocity.y > 500) {
-      handleClose();
-    }
-  };
+  // useCallback garante que a função seja estável e não seja recriada
+  // SEMPRE definido, mesmo quando o modal está fechado, para evitar erros
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      // Verifica se o componente ainda está montado E se o modal ainda está aberto
+      if (
+        !isMountedRef.current ||
+        (!isTemplatesModalOpen && !isAdding)
+      )
+        return;
+
+      // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
+      if (info.offset.y > 100 || info.velocity.y > 500) {
+        handleClose();
+      }
+    },
+    [handleClose, isTemplatesModalOpen, isAdding]
+  );
+
+  if (!isTemplatesModalOpen && !isAdding) return null;
 
   return (
     <AnimatePresence>
@@ -105,9 +143,12 @@ export function TemplatesModal() {
               damping: 30,
               stiffness: 300,
             }}
-            drag="y"
+            drag={
+              isTemplatesModalOpen || isAdding ? "y" : false
+            }
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.2 }}
+            dragListener={isTemplatesModalOpen || isAdding}
             onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
             className={cn(
