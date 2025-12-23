@@ -1,7 +1,7 @@
 // Service Worker para PWA - Habit Builder
 // IMPORTANTE: Alterar a versão do cache quando houver atualizações significativas
 // Esta versão deve ser mantida sincronizada com lib/constants/version.ts
-const CACHE_VERSION = "v1.4.9";
+const CACHE_VERSION = "v1.5.0";
 const CACHE_NAME = `habit-builder-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `habit-builder-runtime-${CACHE_VERSION}`;
 
