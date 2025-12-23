@@ -182,7 +182,7 @@ const HabitsTab = memo(function HabitsTab() {
       <header
         className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_24px_0_rgba(0,0,0,0.3)]"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px))",
         }}
       >
         <div className="border-b border-white/8">
@@ -287,7 +287,7 @@ const StatisticsTab = memo(function StatisticsTab() {
       <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px))",
         }}
       >
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
@@ -465,7 +465,7 @@ const SettingsTab = memo(function SettingsTab() {
       <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px))",
         }}
       >
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">

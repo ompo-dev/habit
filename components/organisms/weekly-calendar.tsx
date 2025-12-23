@@ -88,7 +88,7 @@ export function WeeklyCalendar() {
   }
 
   return (
-    <div className="flex items-center justify-between gap-1 sm:gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       {/* Botão Semana Anterior */}
       <motion.button
         whileHover={{ scale: 1.1, x: -2 }}
@@ -101,7 +101,7 @@ export function WeeklyCalendar() {
       </motion.button>
 
       {/* Dias da Semana */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center">
         {weekDays.map((day, index) => {
           const isSelected = isSameDay(day, selectedDay);
           const dayNumber = getDayOfMonth(day);

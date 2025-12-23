@@ -39,10 +39,10 @@ export default function EstatisticasPage() {
 
   return (
     <div className="bg-background pb-24">
-      <header 
+      <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
-        style={{ 
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top, 0px))",
         }}
       >
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
