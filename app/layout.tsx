@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 import { BottomNavigation } from "@/components/organisms/bottom-navigation";
 import { PWAInstallBanner } from "@/components/organisms/pwa-install-banner";
+import { PWAUpdateBanner } from "@/components/organisms/pwa-update-banner";
 import { OfflineIndicator } from "@/components/organisms/offline-indicator";
 import "./globals.css";
 
@@ -101,28 +102,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
       </head>
       <body className={`font-sans antialiased min-h-screen`}>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('✅ Service Worker registrado:', registration.scope);
-                    })
-                    .catch(function(error) {
-                      console.error('❌ Erro ao registrar Service Worker:', error);
-                    });
-                });
-              }
-            `,
-          }}
-        />
         <NuqsAdapter>
           {children}
           <Suspense fallback={null}>
             <BottomNavigation />
             <PWAInstallBanner />
+            <PWAUpdateBanner />
             <OfflineIndicator />
           </Suspense>
         </NuqsAdapter>

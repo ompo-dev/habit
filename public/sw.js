@@ -1,6 +1,8 @@
 // Service Worker para PWA - Habit Builder
-const CACHE_NAME = 'habit-builder-v1';
-const RUNTIME_CACHE = 'habit-builder-runtime-v1';
+// IMPORTANTE: Alterar a versão do cache quando houver atualizações significativas
+const CACHE_VERSION = 'v1.0.0';
+const CACHE_NAME = `habit-builder-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `habit-builder-runtime-${CACHE_VERSION}`;
 
 // Arquivos estáticos para cache
 const STATIC_ASSETS = [
@@ -14,26 +16,50 @@ const STATIC_ASSETS = [
 
 // Instalação do Service Worker
 self.addEventListener('install', (event) => {
+  console.log('[SW] Instalando Service Worker...', CACHE_VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
+  // Força ativação imediata do novo service worker
   self.skipWaiting();
 });
 
 // Ativação do Service Worker
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Ativando Service Worker...', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      // Deleta todos os caches antigos que não correspondem à versão atual
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
-          .map((name) => caches.delete(name))
+          .filter((name) => {
+            return (
+              name.startsWith('habit-builder-') &&
+              name !== CACHE_NAME &&
+              name !== RUNTIME_CACHE
+            );
+          })
+          .map((name) => {
+            console.log('[SW] Removendo cache antigo:', name);
+            return caches.delete(name);
+          })
       );
     })
   );
-  return self.clients.claim();
+  // Assume controle imediato de todas as páginas
+  return self.clients.claim().then(() => {
+    // Notifica todos os clientes sobre a atualização
+    return self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'SW_UPDATED',
+          version: CACHE_VERSION,
+        });
+      });
+    });
+  });
 });
 
 // Estratégia: Network First, fallback para Cache
