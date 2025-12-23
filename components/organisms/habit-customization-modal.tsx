@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { motion, AnimatePresence, PanInfo } from "framer-motion"
 import { X, Check } from "lucide-react"
 import { cn } from "@/lib/utils/cn"
@@ -47,6 +47,8 @@ export function HabitCustomizationModal({ habitId, isOpen, onClose }: HabitCusto
   const [title, setTitle] = useState("")
   const [selectedIcon, setSelectedIcon] = useState("")
   const [selectedColor, setSelectedColor] = useState({ primary: "", background: "" })
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [isAtTop, setIsAtTop] = useState(true)
 
   useEffect(() => {
     if (habit) {
@@ -85,13 +87,44 @@ export function HabitCustomizationModal({ habitId, isOpen, onClose }: HabitCusto
 
   const IconComponent = (LucideIcons as any)[selectedIcon] as LucideIcon
 
+  // Monitora o scroll para saber se está no topo
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isOpen) return;
+
+    const handleScroll = () => {
+      setIsAtTop(container.scrollTop === 0);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
+
   // Handler para drag - fecha o modal quando arrastar para baixo
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
-    if (info.offset.y > 100 || info.velocity.y > 500) {
-      onClose();
+  // useCallback garante que a função seja estável
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      // Só fecha se estiver no topo E arrastou para baixo mais de 100px ou com velocidade alta
+      if (isAtTop && (info.offset.y > 100 || info.velocity.y > 500)) {
+        onClose();
+      }
+    },
+    [onClose, isAtTop]
+  );
+
+  const handleDragStart = useCallback(() => {
+    // Só permite drag se estiver no topo
+    if (!isAtTop && scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflow = "hidden";
     }
-  };
+  }, [isAtTop]);
+
+  const handleDrag = useCallback(() => {
+    // Restaura scroll durante o drag se não estiver no topo
+    if (!isAtTop && scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflow = "auto";
+    }
+  }, [isAtTop]);
 
   return (
     <AnimatePresence>
@@ -112,6 +145,7 @@ export function HabitCustomizationModal({ habitId, isOpen, onClose }: HabitCusto
           />
 
           <motion.div
+            ref={scrollContainerRef}
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
@@ -120,15 +154,18 @@ export function HabitCustomizationModal({ habitId, isOpen, onClose }: HabitCusto
               damping: 30,
               stiffness: 300,
             }}
-            drag="y"
+            drag={isAtTop ? "y" : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.2 }}
+            dragListener={isAtTop}
+            onDragStart={handleDragStart}
+            onDrag={handleDrag}
             onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
               "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
-              "cursor-grab active:cursor-grabbing"
+              isAtTop ? "cursor-grab active:cursor-grabbing" : ""
             )}
             style={{ touchAction: "pan-y" }}
           >

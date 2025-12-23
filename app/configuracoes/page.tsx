@@ -1,29 +1,37 @@
-"use client"
-import { ArrowLeft, Download, Upload, Trash2, Database } from "lucide-react"
-import Link from "next/link"
-import { useHabitsStore } from "@/lib/stores/habits-store"
+"use client";
+import { ArrowLeft, Download, Upload, Trash2, Database } from "lucide-react";
+import Link from "next/link";
+import { useHabitsStore } from "@/lib/stores/habits-store";
+import { CACHE_VERSION } from "@/lib/constants/version";
 
 export default function ConfiguracoesPage() {
-  const { loadMockData, habits, progress } = useHabitsStore()
+  const { loadMockData, habits, progress } = useHabitsStore();
 
   const handleLoadMockData = () => {
-    const confirmed = confirm("Isso substituirá seus dados atuais por dados de exemplo. Deseja continuar?")
+    const confirmed = confirm(
+      "Isso substituirá seus dados atuais por dados de exemplo. Deseja continuar?"
+    );
     if (confirmed) {
-      loadMockData()
-      alert("Dados de exemplo carregados com sucesso!")
+      loadMockData();
+      alert("Dados de exemplo carregados com sucesso!");
     }
-  }
+  };
 
   const handleClearData = () => {
-    const confirmed = confirm("Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.")
+    const confirmed = confirm(
+      "Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita."
+    );
     if (confirmed) {
-      localStorage.clear()
-      window.location.reload()
+      localStorage.clear();
+      window.location.reload();
     }
-  }
+  };
 
   return (
-    <div className="bg-background pb-24">
+    <div
+      className="bg-background"
+      style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
           <Link
@@ -64,7 +72,9 @@ export default function ConfiguracoesPage() {
                 <Database className="h-5 w-5" />
                 <div className="flex-1 text-left">
                   <div className="font-medium">Carregar dados de exemplo</div>
-                  <div className="text-xs text-white/60">Dados de 1 semana com múltiplos hábitos</div>
+                  <div className="text-xs text-white/60">
+                    Dados de 1 semana com múltiplos hábitos
+                  </div>
                 </div>
               </button>
             </div>
@@ -96,12 +106,12 @@ export default function ConfiguracoesPage() {
 
           <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
             <div className="text-center text-white/40 text-sm">
-              <p>Habit Builder v1.0.0</p>
+              <p>Habit Builder - {CACHE_VERSION}</p>
               <p className="mt-1">PWA • Next.js 16 • Zustand</p>
             </div>
           </div>
         </div>
       </main>
     </div>
-  )
+  );
 }

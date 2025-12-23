@@ -38,7 +38,10 @@ export default function EstatisticasPage() {
   } = statistics;
 
   return (
-    <div className="bg-background pb-24">
+    <div 
+      className="bg-background"
+      style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{

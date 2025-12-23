@@ -76,6 +76,8 @@ export function GroupCreationModal() {
   const [selectedIcon, setSelectedIcon] = useState("Target");
   const [selectedColor, setSelectedColor] = useState("#3b82f6");
   const isMountedRef = useRef(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -145,6 +147,19 @@ export function GroupCreationModal() {
     handleCloseWithCleanup();
   };
 
+  // Monitora o scroll para saber se está no topo
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsAtTop(container.scrollTop === 0);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
+
   // Handler para drag - fecha o modal quando arrastar para baixo
   // useCallback garante que a função seja estável e não seja recriada
   // SEMPRE definido, mesmo quando o modal está fechado, para evitar erros
@@ -153,13 +168,27 @@ export function GroupCreationModal() {
       // Verifica se o componente ainda está montado E se o modal ainda está aberto
       if (!isMountedRef.current || !isOpen) return;
 
-      // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
-      if (info.offset.y > 100 || info.velocity.y > 500) {
+      // Só fecha se estiver no topo E arrastou para baixo mais de 100px ou com velocidade alta
+      if (isAtTop && (info.offset.y > 100 || info.velocity.y > 500)) {
         handleCloseWithCleanup();
       }
     },
-    [handleCloseWithCleanup, isOpen]
+    [handleCloseWithCleanup, isOpen, isAtTop]
   );
+
+  const handleDragStart = useCallback(() => {
+    // Só permite drag se estiver no topo
+    if (!isAtTop && scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflow = "hidden";
+    }
+  }, [isAtTop]);
+
+  const handleDrag = useCallback(() => {
+    // Restaura scroll durante o drag se não estiver no topo
+    if (!isAtTop && scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflow = "auto";
+    }
+  }, [isAtTop]);
 
   return (
     <AnimatePresence>
@@ -180,6 +209,7 @@ export function GroupCreationModal() {
           />
 
           <motion.div
+            ref={scrollContainerRef}
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
@@ -188,15 +218,18 @@ export function GroupCreationModal() {
               damping: 30,
               stiffness: 300,
             }}
-            drag={isOpen ? "y" : false}
+            drag={isOpen && isAtTop ? "y" : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.2 }}
+            dragListener={isAtTop}
+            onDragStart={handleDragStart}
+            onDrag={handleDrag}
             onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
               "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
-              "cursor-grab active:cursor-grabbing"
+              isAtTop ? "cursor-grab active:cursor-grabbing" : ""
             )}
             style={{ touchAction: "pan-y" }}
           >

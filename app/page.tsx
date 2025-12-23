@@ -33,6 +33,7 @@ import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
 import React from "react";
 import { Swapper } from "@/components/organisms/swapper";
 import type { HabitCategory } from "@/lib/types/habit";
+import { CACHE_VERSION } from "@/lib/constants/version";
 
 // Lazy loading de componentes pesados para melhorar performance inicial
 const WeeklyCalendar = lazy(() =>
@@ -229,7 +230,10 @@ const HabitsTab = memo(function HabitsTab() {
       </header>
 
       <main
-        className="mx-auto max-w-lg px-6 py-6 pb-24"
+        className="mx-auto max-w-lg px-6 py-6"
+        style={{
+          paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))",
+        }}
         role="main"
         aria-label="Lista de hábitos"
       >
@@ -304,7 +308,10 @@ const StatisticsTab = memo(function StatisticsTab() {
       </header>
 
       <main
-        className="mx-auto max-w-lg px-6 py-6 pb-24"
+        className="mx-auto max-w-lg px-6 py-6"
+        style={{
+          paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))",
+        }}
         role="main"
         aria-label="Estatísticas"
       >
@@ -473,7 +480,12 @@ const SettingsTab = memo(function SettingsTab() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-6 py-6 pb-24">
+      <main
+        className="mx-auto max-w-lg px-6 py-6"
+        style={{
+          paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
         <div className="flex flex-col gap-4">
           <SettingsSection title="Aparência">
             <div className="flex items-center justify-between">
@@ -545,7 +557,7 @@ const SettingsTab = memo(function SettingsTab() {
 
           <SettingsSection title="">
             <div className="text-center text-white/40 text-sm">
-              <p>Habit Builder v1.0.0</p>
+              <p>Habit Builder - {CACHE_VERSION}</p>
               <p className="mt-1">PWA • Next.js 16 • Zustand</p>
             </div>
           </SettingsSection>
