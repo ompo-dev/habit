@@ -131,7 +131,7 @@ function HabitsTab() {
         </div>
 
         {/* Calendário Semanal - Dentro do Header Sticky */}
-        <div className="mx-auto max-w-lg px-6 py-4 border-b border-white/8">
+        <div className="mx-auto max-w-lg px-2 py-4 border-b border-white/8">
           <WeeklyCalendar />
         </div>
       </header>
