@@ -1,6 +1,7 @@
 "use client";
 
 import { Award, TrendingUp } from "lucide-react";
+import { useHydratedValue } from "@/lib/hooks/use-hydration";
 import type { Habit } from "@/lib/types/habit";
 
 interface Highlight {
@@ -20,7 +21,13 @@ export function HighlightsSection({
   bestCompletion,
   habits,
 }: HighlightsSectionProps) {
-  if (!mostConsistent && !bestCompletion) return null;
+  // Previne erro de hidratação
+  const hasHighlights = useHydratedValue(
+    () => !!(mostConsistent || bestCompletion),
+    false
+  );
+
+  if (!hasHighlights) return null;
 
   return (
     <div className="mb-6">

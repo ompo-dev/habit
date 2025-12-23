@@ -52,18 +52,20 @@ import { DateHeader } from "@/components/molecules/date-header";
 import { CalendarViewToggle } from "@/components/molecules/calendar-view-toggle";
 import { HighlightsSection } from "@/components/molecules/highlights-section";
 import { SettingsSection } from "@/components/molecules/settings-section";
+import { Swapper } from "@/components/organisms/swapper";
 import type { HabitCategory } from "@/lib/types/habit";
 
 export default function HomePage() {
   useHabitData(); // Carrega dados mock automaticamente
-  const { activeTab } = useActiveTab();
 
   return (
     <ClientProviders>
       <div className="min-h-screen bg-background pb-24">
-        {activeTab === "habits" && <HabitsTab />}
-        {activeTab === "statistics" && <StatisticsTab />}
-        {activeTab === "settings" && <SettingsTab />}
+        <Swapper>
+          <HabitsTab />
+          <StatisticsTab />
+          <SettingsTab />
+        </Swapper>
 
         <BottomNavigation />
         <HabitModal />
@@ -162,6 +164,18 @@ function StatisticsTab() {
     bestCompletion,
   } = statistics;
 
+  // Previne erro de hidratação - só mostra dados após montar no cliente
+  const hydratedTotalStreak = useHydratedValue(() => totalStreak, 0);
+  const hydratedCompletionRate = useHydratedValue(() => completionRateToday, 0);
+  const hydratedWeekCompletions = useHydratedValue(
+    () => thisWeekCompletions,
+    0
+  );
+  const hydratedMonthCompletions = useHydratedValue(
+    () => thisMonthCompletions,
+    0
+  );
+
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
@@ -191,25 +205,25 @@ function StatisticsTab() {
           <StatCard
             icon={<Flame className="h-5 w-5 text-orange-400" />}
             label="Streak Total"
-            value={totalStreak}
+            value={hydratedTotalStreak}
             color="bg-orange-500/20"
           />
           <StatCard
             icon={<Target className="h-5 w-5 text-emerald-400" />}
             label="Taxa Hoje"
-            value={`${completionRateToday}%`}
+            value={`${hydratedCompletionRate}%`}
             color="bg-emerald-500/20"
           />
           <StatCard
             icon={<TrendingUp className="h-5 w-5 text-blue-400" />}
             label="Esta Semana"
-            value={thisWeekCompletions}
+            value={hydratedWeekCompletions}
             color="bg-blue-500/20"
           />
           <StatCard
             icon={<Calendar className="h-5 w-5 text-purple-400" />}
             label="Este Mês"
-            value={thisMonthCompletions}
+            value={hydratedMonthCompletions}
             color="bg-purple-500/20"
           />
         </div>
