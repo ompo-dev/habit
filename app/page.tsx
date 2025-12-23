@@ -30,7 +30,7 @@ import {
   useHabitTemplatesModal,
 } from "@/lib/hooks/use-search-params";
 import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
-import React, { useRef, useEffect, useState } from "react";
+import React from "react";
 import { Swapper } from "@/components/organisms/swapper";
 import type { HabitCategory } from "@/lib/types/habit";
 
@@ -168,8 +168,6 @@ const HabitsTab = memo(function HabitsTab() {
   const { open: openHabitTemplatesModal } = useHabitTemplatesModal();
   const { selectedDay, isToday, goToPreviousDay, goToNextDay, goToToday } =
     useSelectedDay();
-  const headerTopRef = useRef<HTMLDivElement>(null);
-  const [headerOffset, setHeaderOffset] = useState(0);
 
   // Previne erro de hidratação - só mostra dados do store após montar no cliente
   const totalStreak = useHydratedValue(() => getTotalStreak(), 0);
@@ -179,35 +177,15 @@ const HabitsTab = memo(function HabitsTab() {
     setSelectedDate(selectedDay);
   }, [selectedDay, setSelectedDate]);
 
-  // Calcula metade da altura do header (apenas a parte superior, sem calendário) para compensar o notch
-  useEffect(() => {
-    if (headerTopRef.current) {
-      const updateOffset = () => {
-        requestAnimationFrame(() => {
-          // Mede apenas a primeira div (sem incluir o calendário)
-          const headerTopHeight = headerTopRef.current?.offsetHeight || 0;
-          // Metade da altura = compensação para o notch que cobre 50%
-          setHeaderOffset(headerTopHeight / 2);
-        });
-      };
-      const timer = setTimeout(updateOffset, 100);
-      window.addEventListener("resize", updateOffset);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener("resize", updateOffset);
-      };
-    }
-  }, []);
-
   return (
     <>
       <header
         className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_24px_0_rgba(0,0,0,0.3)]"
         style={{
-          paddingTop: `calc(env(safe-area-inset-top, 0px) + ${headerOffset}px)`,
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
         }}
       >
-        <div className="border-b border-white/8" ref={headerTopRef}>
+        <div className="border-b border-white/8">
           <div className="mx-auto flex max-w-lg items-center justify-between px-6 py-4">
             <button
               onClick={openGroupTemplatesModal}
@@ -277,27 +255,6 @@ const HabitsTab = memo(function HabitsTab() {
 
 // Tab de Estatísticas - Memoizado para evitar re-renders desnecessários
 const StatisticsTab = memo(function StatisticsTab() {
-  const headerTopRef = useRef<HTMLDivElement>(null);
-  const [headerOffset, setHeaderOffset] = useState(0);
-
-  // Calcula metade da altura do header (apenas a parte superior) para compensar o notch
-  useEffect(() => {
-    if (headerTopRef.current) {
-      const updateOffset = () => {
-        requestAnimationFrame(() => {
-          // Mede apenas a primeira div do header
-          const headerTopHeight = headerTopRef.current?.offsetHeight || 0;
-          setHeaderOffset(headerTopHeight / 2);
-        });
-      };
-      const timer = setTimeout(updateOffset, 100);
-      window.addEventListener("resize", updateOffset);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener("resize", updateOffset);
-      };
-    }
-  }, []);
   const statistics = useHabitStatistics();
   const { last7DaysProgress } = useProgressData();
   const { habits } = useHabitsStore();
@@ -330,13 +287,10 @@ const StatisticsTab = memo(function StatisticsTab() {
       <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{
-          paddingTop: `calc(env(safe-area-inset-top, 0px) + ${headerOffset}px)`,
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
         }}
       >
-        <div
-          className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4"
-          ref={headerTopRef}
-        >
+        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
           <h1 className="text-2xl font-bold text-white">Estatísticas</h1>
         </div>
 
@@ -498,27 +452,6 @@ const StatisticsTab = memo(function StatisticsTab() {
 
 // Tab de Configurações - Memoizado para evitar re-renders desnecessários
 const SettingsTab = memo(function SettingsTab() {
-  const headerTopRef = useRef<HTMLDivElement>(null);
-  const [headerOffset, setHeaderOffset] = useState(0);
-
-  // Calcula metade da altura do header (apenas a parte superior) para compensar o notch
-  useEffect(() => {
-    if (headerTopRef.current) {
-      const updateOffset = () => {
-        requestAnimationFrame(() => {
-          // Mede apenas a primeira div do header
-          const headerTopHeight = headerTopRef.current?.offsetHeight || 0;
-          setHeaderOffset(headerTopHeight / 2);
-        });
-      };
-      const timer = setTimeout(updateOffset, 100);
-      window.addEventListener("resize", updateOffset);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener("resize", updateOffset);
-      };
-    }
-  }, []);
   const {
     handleLoadMockData,
     handleClearData,
@@ -532,13 +465,10 @@ const SettingsTab = memo(function SettingsTab() {
       <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{
-          paddingTop: `calc(env(safe-area-inset-top, 0px) + ${headerOffset}px)`,
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
         }}
       >
-        <div
-          className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4"
-          ref={headerTopRef}
-        >
+        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
           <h1 className="text-2xl font-bold text-white">Configurações</h1>
         </div>
       </header>

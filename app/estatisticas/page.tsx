@@ -1,5 +1,4 @@
 "use client";
-import { useRef, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Flame,
@@ -27,26 +26,6 @@ export default function EstatisticasPage() {
   const statistics = useHabitStatistics();
   const { last7DaysProgress } = useProgressData();
   const { habits } = useHabitsStore();
-  const headerTopRef = useRef<HTMLDivElement>(null);
-  const [headerOffset, setHeaderOffset] = useState(0);
-
-  // Calcula metade da altura do header (apenas a parte superior) para compensar o notch
-  useEffect(() => {
-    if (headerTopRef.current) {
-      const updateOffset = () => {
-        requestAnimationFrame(() => {
-          const headerTopHeight = headerTopRef.current?.offsetHeight || 0;
-          setHeaderOffset(headerTopHeight / 2);
-        });
-      };
-      const timer = setTimeout(updateOffset, 100);
-      window.addEventListener("resize", updateOffset);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener("resize", updateOffset);
-      };
-    }
-  }, []);
 
   const {
     totalStreak,
@@ -63,10 +42,10 @@ export default function EstatisticasPage() {
       <header 
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{ 
-          paddingTop: `calc(env(safe-area-inset-top, 0px) + ${headerOffset}px)`
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)"
         }}
       >
-        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4" ref={headerTopRef}>
+        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
           <Link
             href="/"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
