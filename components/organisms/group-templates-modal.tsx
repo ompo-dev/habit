@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { X, Search, Sparkles, FolderPlus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -22,12 +22,26 @@ export function GroupTemplatesModal() {
   const { openCreate: openCreationModal } = useGroupCreationModal();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isGroupTemplatesModalOpen) {
       document.body.style.overflow = "hidden";
+      isMountedRef.current = true;
     } else {
       document.body.style.overflow = "unset";
+      // Delay para garantir que o drag termine antes de desmontar
+      const timeout = setTimeout(() => {
+        isMountedRef.current = false;
+      }, 300);
+      return () => clearTimeout(timeout);
     }
 
     return () => {
@@ -39,33 +53,50 @@ export function GroupTemplatesModal() {
     template.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectTemplate = (template: GroupTemplate) => {
-    // Salva template no sessionStorage
-    sessionStorage.setItem("selectedGroupTemplate", JSON.stringify(template));
-    openCreationModal();
-  };
+  const handleSelectTemplate = useCallback(
+    (template: GroupTemplate) => {
+      // Salva template no sessionStorage
+      sessionStorage.setItem("selectedGroupTemplate", JSON.stringify(template));
+      // Delay pequeno para garantir que o drag termine
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          openCreationModal();
+        }
+      }, 50);
+    },
+    [openCreationModal]
+  );
 
-  const handleCreateCustom = () => {
+  const handleCreateCustom = useCallback(() => {
     // Remove template do sessionStorage
     sessionStorage.removeItem("selectedGroupTemplate");
-    openCreationModal();
-  };
+    // Delay pequeno para garantir que o drag termine
+    setTimeout(() => {
+      if (isMountedRef.current) {
+        openCreationModal();
+      }
+    }, 50);
+  }, [openCreationModal]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     closeGroupTemplatesModal();
     setSearchQuery("");
-  };
+  }, [closeGroupTemplatesModal]);
 
   // Handler para drag - fecha o modal quando arrastar para baixo
-  const handleDragEnd = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
-    // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
-    if (info.offset.y > 100 || info.velocity.y > 500) {
-      handleClose();
-    }
-  };
+  // useCallback garante que a função seja estável e não seja recriada
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      // Verifica se o componente ainda está montado
+      if (!isMountedRef.current) return;
+
+      // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
+      if (info.offset.y > 100 || info.velocity.y > 500) {
+        handleClose();
+      }
+    },
+    [handleClose]
+  );
 
   if (!isGroupTemplatesModalOpen) return null;
 
