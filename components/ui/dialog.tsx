@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -53,7 +54,6 @@ export function Dialog({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
 
   const sizeClasses = {
     sm: "max-w-sm",
@@ -62,50 +62,89 @@ export function Dialog({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
 
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={cn(
-          "relative w-full rounded-2xl shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
-          "bg-background/95 backdrop-blur-3xl border border-white/15 p-6",
-          "animate-in fade-in-0 zoom-in-95 duration-200",
-          sizeClasses[size]
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h2
-              className={cn(
-                "text-xl font-bold",
-                variant === "danger" ? "text-red-400" : "text-white"
-              )}
-            >
-              {title}
-            </h2>
-            {description && (
-              <p className="mt-2 text-sm text-white/60 whitespace-pre-line">{description}</p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 300,
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "relative w-full rounded-2xl shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
+              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6",
+              sizeClasses[size]
             )}
-          </div>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="flex items-start justify-between mb-4"
+            >
+              <div className="flex-1">
+                <h2
+                  className={cn(
+                    "text-xl font-bold",
+                    variant === "danger" ? "text-red-400" : "text-white"
+                  )}
+                >
+                  {title}
+                </h2>
+                {description && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="mt-2 text-sm text-white/60 whitespace-pre-line"
+                  >
+                    {description}
+                  </motion.p>
+                )}
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+              >
+                <X className="h-4 w-4" />
+              </motion.button>
+            </motion.div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
-          {children}
-        </div>
-      </div>
-    </div>
+            {/* Footer */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center justify-end gap-3 pt-4 border-t border-white/10"
+            >
+              {children}
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -124,7 +163,9 @@ export function DialogButton({
   }, [autoFocus]);
 
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       ref={buttonRef}
       onClick={onClick}
       className={cn(
@@ -137,6 +178,6 @@ export function DialogButton({
       )}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }

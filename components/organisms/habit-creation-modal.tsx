@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useHabitsStore } from "@/lib/stores/habits-store";
@@ -208,42 +209,66 @@ export function HabitCreationModal() {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-end justify-center sm:items-center"
-      onClick={handleCloseWithCleanup}
-    >
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-60 flex items-end justify-center sm:items-center"
+          onClick={handleCloseWithCleanup}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
 
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={cn(
-          "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
-          "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
-          "animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0",
-          "duration-300"
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 sticky top-0 bg-background/95 pb-4 border-b border-white/10 backdrop-blur-xl z-10">
-          <h2 className="text-2xl font-bold text-white">
-            {sessionStorage.getItem("selectedHabitTemplate")
-              ? "Personalizar Hábito"
-              : "Criar Hábito"}
-          </h2>
-          <button
-            onClick={handleSave}
-            disabled={!title}
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{
+              type: "spring",
+              damping: 30,
+              stiffness: 300,
+            }}
+            onClick={(e) => e.stopPropagation()}
             className={cn(
-              "flex h-10 px-6 items-center justify-center rounded-full transition-all font-medium shadow-lg",
-              title
-                ? "bg-green-500 hover:bg-green-600 text-white"
-                : "bg-white/10 cursor-not-allowed opacity-50 text-white/40"
+              "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
+              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]"
             )}
           >
-            <Check className="h-5 w-5 mr-2" />
-            {sessionStorage.getItem("selectedHabitTemplate") ? "Add" : "Criar"}
-          </button>
-        </div>
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center justify-between mb-6 sticky top-0 bg-background/95 pb-4 border-b border-white/10 backdrop-blur-xl z-10"
+            >
+              <h2 className="text-2xl font-bold text-white">
+                {sessionStorage.getItem("selectedHabitTemplate")
+                  ? "Personalizar Hábito"
+                  : "Criar Hábito"}
+              </h2>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSave}
+                disabled={!title}
+                className={cn(
+                  "flex h-10 px-6 items-center justify-center rounded-full transition-all font-medium shadow-lg",
+                  title
+                    ? "bg-green-500 hover:bg-green-600 text-white"
+                    : "bg-white/10 cursor-not-allowed opacity-50 text-white/40"
+                )}
+              >
+                <Check className="h-5 w-5 mr-2" />
+                {sessionStorage.getItem("selectedHabitTemplate") ? "Add" : "Criar"}
+              </motion.button>
+            </motion.div>
 
         {/* Preview */}
         <PreviewCard
@@ -552,9 +577,11 @@ export function HabitCreationModal() {
           />
         </div>
 
-        {/* Espaçamento final */}
-        <div className="h-4"></div>
-      </div>
-    </div>
+            {/* Espaçamento final */}
+            <div className="h-4"></div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

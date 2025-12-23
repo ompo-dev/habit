@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import {
   getWeekDays,
@@ -12,11 +13,16 @@ import { useHabitsStore } from "@/lib/stores/habits-store";
 import { useSelectedDay } from "@/lib/hooks/use-search-params";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useHydration } from "@/lib/hooks/use-hydration";
 
 export function WeeklyCalendar() {
+  const isHydrated = useHydration();
   const { selectedDay, setSelectedDay } = useSelectedDay();
   const { habits, progress } = useHabitsStore();
-  const [weekStart, setWeekStart] = useState(getStartOfWeek(selectedDay));
+  const [weekStart, setWeekStart] = useState(() => {
+    if (typeof window === "undefined") return new Date();
+    return getStartOfWeek(selectedDay);
+  });
 
   // Atualiza weekStart quando selectedDay muda
   useEffect(() => {
@@ -24,7 +30,11 @@ export function WeeklyCalendar() {
     setWeekStart(newWeekStart);
   }, [selectedDay]);
 
-  const weekDays = getWeekDays(weekStart);
+  const weekDays = useMemo(() => {
+    if (!isHydrated) return [];
+    return getWeekDays(weekStart);
+  }, [weekStart, isHydrated]);
+
   const today = new Date();
 
   const getDayCompletionData = (day: Date) => {
@@ -65,21 +75,37 @@ export function WeeklyCalendar() {
     setWeekStart(newStart);
   };
 
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-between gap-1 sm:gap-3">
+        <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2">
+          {[...Array(7)].map((_, i) => (
+            <div
+              key={i}
+              className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white/5 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-between gap-1 sm:gap-3">
       {/* Botão Semana Anterior */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1, x: -2 }}
+        whileTap={{ scale: 0.9 }}
         onClick={goToPreviousWeek}
         className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg"
         aria-label="Semana anterior"
       >
         <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-      </button>
+      </motion.button>
 
       {/* Dias da Semana */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center overflow-x-auto scrollbar-none">
-        {weekDays.map((day) => {
+      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center">
+        {weekDays.map((day, index) => {
           const isSelected = isSameDay(day, selectedDay);
           const dayNumber = getDayOfMonth(day);
           const weekday = getWeekdayShort(day, "pt-BR");
@@ -95,19 +121,27 @@ export function WeeklyCalendar() {
             circumference - (percentage / 100) * circumference;
 
           return (
-            <button
+            <motion.button
               key={day.toISOString()}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              animate={{
+                backgroundColor: isSelected
+                  ? "rgb(139, 92, 246)"
+                  : "transparent",
+              }}
+              transition={{ duration: 0.2 }}
               onClick={() => setSelectedDay(day)}
               className={cn(
                 "flex flex-col items-center gap-1 min-w-[40px] sm:min-w-[48px] p-2 sm:p-2 rounded-full justify-center",
-                "transition-all duration-200 backdrop-blur-xl",
-                isSelected && "bg-primary shadow-lg"
+                "backdrop-blur-xl transition-all duration-200",
+                isSelected && "shadow-lg"
               )}
             >
               {/* Dia da Semana */}
               <span
                 className={cn(
-                  "text-[9px] sm:text-[10px] font-medium uppercase tracking-wide",
+                  "text-[9px] sm:text-[10px] font-medium uppercase tracking-wide transition-colors duration-200",
                   isSelected ? "text-white" : "text-white/40"
                 )}
               >
@@ -119,7 +153,7 @@ export function WeeklyCalendar() {
                 {/* Ring Progressivo SVG */}
                 {isPartial && (
                   <svg
-                    className="absolute inset-0 -rotate-90"
+                    className="absolute inset-0 -rotate-90 transition-opacity duration-200"
                     width="36"
                     height="36"
                     viewBox="0 0 36 36"
@@ -140,10 +174,14 @@ export function WeeklyCalendar() {
                 )}
 
                 {/* Número */}
-                <div
+                <motion.div
+                  animate={{
+                    scale: isSelected ? 1.05 : 1,
+                  }}
+                  transition={{ duration: 0.2 }}
                   className={cn(
-                    "flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full",
-                    "text-xs sm:text-sm font-semibold transition-all duration-200",
+                    "flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full transition-all duration-200",
+                    "text-xs sm:text-sm font-semibold",
                     // Completo
                     isCompleted && !isSelected && "bg-primary text-black",
                     // Completo + Selecionado
@@ -163,21 +201,23 @@ export function WeeklyCalendar() {
                   <span className="translate-x-[2px] translate-y-[2px]">
                     {dayNumber}
                   </span>
-                </div>
+                </motion.div>
               </div>
-            </button>
+            </motion.button>
           );
         })}
       </div>
 
       {/* Botão Próxima Semana */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1, x: 2 }}
+        whileTap={{ scale: 0.9 }}
         onClick={goToNextWeek}
         className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg"
         aria-label="Próxima semana"
       >
         <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-      </button>
+      </motion.button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { MoreVertical, Trash2, Edit, BarChart3, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/atoms/badge";
@@ -121,107 +122,167 @@ export function HabitModal() {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      onClick={handleClose}
-    >
-      <div className="absolute inset-0 bg-black/5 backdrop-blur-xs" />
+    <AnimatePresence>
+      {isOpen && habit && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+          onClick={handleClose}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
 
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={cn(
-          "relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl",
-          "bg-background/95 backdrop-blur-3xl border border-white/15 p-6",
-          "shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
-          "animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0",
-          "duration-300"
-        )}
-      >
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-3 flex-1">
-            <div
-              className="flex h-14 w-14 items-center justify-center rounded-xl backdrop-blur-xl border shadow-lg"
-              style={{
-                backgroundColor: habit.backgroundColor || habit.color + "40",
-                borderColor: habit.color + "50",
-              }}
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{
+              type: "spring",
+              damping: 30,
+              stiffness: 300,
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl",
+              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6",
+              "shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]"
+            )}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="flex items-start justify-between mb-6"
             >
-              <IconComponent
-                className="h-7 w-7"
-                style={{ color: habit.color }}
-              />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">{habit.title}</h2>
-              <p className="text-sm text-white/60">{getSubtitle()}</p>
-            </div>
-          </div>
+              <div className="flex items-center gap-3 flex-1">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                  className="flex h-14 w-14 items-center justify-center rounded-xl backdrop-blur-xl border shadow-lg"
+                  style={{
+                    backgroundColor:
+                      habit.backgroundColor || habit.color + "40",
+                    borderColor: habit.color + "50",
+                  }}
+                >
+                  <IconComponent
+                    className="h-7 w-7"
+                    style={{ color: habit.color }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <h2 className="text-2xl font-bold text-white">
+                    {habit.title}
+                  </h2>
+                  <p className="text-sm text-white/60">{getSubtitle()}</p>
+                </motion.div>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <DropdownMenuTrigger asChild>
-                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg">
-                  <MoreVertical className="h-5 w-5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-48 bg-background/95 backdrop-blur-xl border border-white/15 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-2"
               >
-                <DropdownMenuItem
-                  onClick={() => {
-                    setIsCustomizationOpen(true);
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 text-white hover:bg-white/10 cursor-pointer"
-                >
-                  <Edit className="h-4 w-4" />
-                  <span>Editar</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 text-white hover:bg-white/10 cursor-pointer"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span>Estatísticas</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    handleDelete();
-                  }}
-                  className="flex items-center gap-2 text-red-500 hover:bg-red-500/10 cursor-pointer"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>Excluir</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+                <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg"
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </motion.button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-48 bg-background/95 backdrop-blur-xl border border-white/15 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsCustomizationOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 text-white hover:bg-white/10 cursor-pointer"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span>Editar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2 text-white hover:bg-white/10 cursor-pointer"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Estatísticas</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        handleDelete();
+                      }}
+                      className="flex items-center gap-2 text-red-500 hover:bg-red-500/10 cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Excluir</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </motion.div>
+            </motion.div>
 
-        <div className="mb-6">
-          {habit.streak > 0 && (
-            <Badge
-              variant="warning"
-              className="mb-2 backdrop-blur-xl shadow-lg"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mb-6"
             >
-              🔥 {habit.streak} dias de sequência
-            </Badge>
+              {habit.streak > 0 && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.25, type: "spring" }}
+                >
+                  <Badge
+                    variant="warning"
+                    className="mb-2 backdrop-blur-xl shadow-lg"
+                  >
+                    🔥 {habit.streak} dias de sequência
+                  </Badge>
+                </motion.div>
+              )}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              {renderControl()}
+            </motion.div>
+          </motion.div>
+
+          {selectedHabitId && (
+            <HabitCustomizationModal
+              habitId={selectedHabitId}
+              isOpen={isCustomizationOpen}
+              onClose={() => setIsCustomizationOpen(false)}
+            />
           )}
-        </div>
-
-        <div>{renderControl()}</div>
-      </div>
-
-      {selectedHabitId && (
-        <HabitCustomizationModal
-          habitId={selectedHabitId}
-          isOpen={isCustomizationOpen}
-          onClose={() => setIsCustomizationOpen(false)}
-        />
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 }

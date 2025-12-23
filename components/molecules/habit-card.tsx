@@ -1,5 +1,6 @@
 "use client"
 
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils/cn"
 import { Badge } from "@/components/atoms/badge"
 import type { HabitWithProgress } from "@/lib/types/habit"
@@ -27,33 +28,57 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.2 }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      whileTap={{ scale: 0.98 }}
       className={cn(
-        "group relative flex items-center gap-3 rounded-2xl p-4 transition-all",
-        "backdrop-blur-xl border shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]",
-        "hover:scale-[1.02] hover:shadow-[0_8px_24px_0_rgba(0,0,0,0.35)] active:scale-[0.98] cursor-pointer",
+        "group relative flex items-center gap-3 rounded-2xl p-4",
+        "backdrop-blur-xl border transition-all duration-300",
+        "cursor-pointer"
       )}
       style={{ 
-        backgroundColor: habit.color + "20",
-        borderColor: habit.color + "30"
+        backgroundColor: isCompleted 
+          ? habit.color + "30" 
+          : habit.color + "20",
+        borderColor: isCompleted 
+          ? habit.color + "50" 
+          : habit.color + "30"
       }}
       onClick={onClick}
     >
       <div
-        className="flex h-12 w-12 items-center justify-center rounded-xl backdrop-blur-lg border"
+        className="flex h-12 w-12 items-center justify-center rounded-xl backdrop-blur-lg border transition-all duration-300"
         style={{ 
-          backgroundColor: habit.backgroundColor || habit.color + "30",
-          borderColor: habit.color + "40"
+          backgroundColor: isCompleted
+            ? habit.color + "40"
+            : habit.backgroundColor || habit.color + "30",
+          borderColor: isCompleted
+            ? habit.color + "60"
+            : habit.color + "40"
         }}
       >
         <IconComponent className="h-6 w-6" style={{ color: habit.color }} />
       </div>
 
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-white truncate">{habit.title}</h3>
+        <h3 className={cn(
+          "font-semibold text-white truncate transition-opacity duration-300",
+          isCompleted && "opacity-80"
+        )}>
+          {habit.title}
+        </h3>
         <div className="flex items-center gap-2 mt-1">
           {getIcon()}
-          <p className="text-sm text-white/60">{progress.text}</p>
+          <p className={cn(
+            "text-sm transition-opacity duration-300",
+            isCompleted ? "text-white/50" : "text-white/60"
+          )}>
+            {progress.text}
+          </p>
           {habit.streak > 0 && (
             <Badge variant="warning" className="text-xs flex items-center gap-1">
               <Flame className="h-3 w-3" /> {habit.streak}
@@ -62,7 +87,9 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
         </div>
       </div>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={(e) => {
           e.stopPropagation()
           if (isCompleted) {
@@ -72,14 +99,36 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
           }
         }}
         className={cn(
-          "flex h-12 w-12 items-center justify-center rounded-full transition-all backdrop-blur-lg border",
+          "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 backdrop-blur-lg border",
           isCompleted 
             ? "bg-white/20 text-white border-white/30 shadow-lg" 
             : "bg-white/8 text-white/40 border-white/12 hover:bg-white/20 hover:text-white hover:border-white/25",
         )}
       >
-        {isCompleted ? <Check className="h-6 w-6" /> : <X className="h-6 w-6" />}
-      </button>
-    </div>
+        <AnimatePresence mode="wait">
+          {isCompleted ? (
+            <motion.div
+              key="check"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Check className="h-6 w-6" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="x"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <X className="h-6 w-6" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
+    </motion.div>
   )
 }
