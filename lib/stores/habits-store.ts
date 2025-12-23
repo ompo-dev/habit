@@ -90,6 +90,9 @@ interface HabitsState {
   // Mock Data
   loadMockData: () => void;
 
+  // Import/Export
+  importData: (data: { habits: Habit[]; progress: Progress[]; groups?: HabitGroup[] }) => void;
+
   // Sync
   syncWithServer: () => Promise<void>;
 }
@@ -722,8 +725,38 @@ export const useHabitsStore = create<HabitsState>()(
         set({
           habits,
           progress,
-          groups: mockData.groups,
+          groups: mockData.groups || [],
         });
+      },
+
+      importData: (data) => {
+        // Converte strings de data para objetos Date
+        const habits = (data.habits || []).map((h: any) => ({
+          ...h,
+          createdAt: h.createdAt instanceof Date ? h.createdAt : new Date(h.createdAt),
+        }));
+
+        const progress = (data.progress || []).map((p: any) => ({
+          ...p,
+          completedAt: p.completedAt
+            ? p.completedAt instanceof Date
+              ? p.completedAt
+              : new Date(p.completedAt)
+            : undefined,
+        }));
+
+        const groups = (data.groups || []).map((g: any) => ({
+          ...g,
+          createdAt: g.createdAt instanceof Date ? g.createdAt : new Date(g.createdAt),
+        }));
+
+        set({
+          habits,
+          progress,
+          groups,
+        });
+
+        toast.success("Dados importados com sucesso!");
       },
 
       syncWithServer: async () => {

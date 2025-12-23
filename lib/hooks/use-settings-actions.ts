@@ -5,7 +5,7 @@ import { useDialog } from "@/lib/contexts/dialog-context";
  * Hook para ações de configurações
  */
 export function useSettingsActions() {
-  const { loadMockData, habits, progress } = useHabitsStore();
+  const { loadMockData, habits, progress, groups, importData } = useHabitsStore();
   const { confirm, alert } = useDialog();
 
   const handleLoadMockData = async () => {
@@ -41,6 +41,7 @@ export function useSettingsActions() {
     const data = {
       habits,
       progress,
+      groups,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -55,6 +56,17 @@ export function useSettingsActions() {
   };
 
   const handleImportData = async () => {
+    const confirmed = await confirm({
+      title: "Importar dados",
+      description:
+        "Isso substituirá seus dados atuais pelos dados importados. Deseja continuar?",
+      confirmText: "Sim, importar",
+      cancelText: "Cancelar",
+      variant: "danger",
+    });
+
+    if (!confirmed) return;
+
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "application/json";
@@ -65,10 +77,34 @@ export function useSettingsActions() {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        // Aqui você implementaria a lógica de importação
+
+        // Validação básica da estrutura dos dados
+        if (!data.habits || !Array.isArray(data.habits)) {
+          throw new Error("Formato de arquivo inválido: 'habits' deve ser um array");
+        }
+
+        if (!data.progress || !Array.isArray(data.progress)) {
+          throw new Error("Formato de arquivo inválido: 'progress' deve ser um array");
+        }
+
+        // Importa os dados usando a função do store
+        importData({
+          habits: data.habits,
+          progress: data.progress,
+          groups: data.groups || [],
+        });
+
         await alert("Dados importados com sucesso!", "Sucesso");
       } catch (error) {
-        await alert("Erro ao importar dados", "Erro");
+        console.error("Erro ao importar dados:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Erro desconhecido ao importar dados";
+        await alert(
+          `Erro ao importar dados: ${errorMessage}`,
+          "Erro"
+        );
       }
     };
     input.click();

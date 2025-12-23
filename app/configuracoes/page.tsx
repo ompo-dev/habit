@@ -1,31 +1,17 @@
 "use client";
 import { ArrowLeft, Download, Upload, Trash2, Database } from "lucide-react";
 import Link from "next/link";
-import { useHabitsStore } from "@/lib/stores/habits-store";
 import { CACHE_VERSION } from "@/lib/constants/version";
+import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
 
 export default function ConfiguracoesPage() {
-  const { loadMockData, habits, progress } = useHabitsStore();
-
-  const handleLoadMockData = () => {
-    const confirmed = confirm(
-      "Isso substituirá seus dados atuais por dados de exemplo. Deseja continuar?"
-    );
-    if (confirmed) {
-      loadMockData();
-      alert("Dados de exemplo carregados com sucesso!");
-    }
-  };
-
-  const handleClearData = () => {
-    const confirmed = confirm(
-      "Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita."
-    );
-    if (confirmed) {
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
+  const {
+    handleLoadMockData,
+    handleClearData,
+    handleExportData,
+    handleImportData,
+    stats,
+  } = useSettingsActions();
 
   return (
     <div
@@ -84,13 +70,23 @@ export default function ConfiguracoesPage() {
             <h2 className="font-semibold text-white mb-4">Dados</h2>
             <div className="space-y-3">
               <div className="text-sm text-white/60 mb-3">
-                {habits.length} hábitos • {progress.length} registros
+                {stats.habitsCount} hábitos • {stats.progressCount} registros
               </div>
-              <button className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl">
+              <button
+                onClick={handleExportData}
+                className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl"
+                aria-label="Exportar dados"
+                type="button"
+              >
                 <Download className="h-4 w-4" />
                 Exportar dados
               </button>
-              <button className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl">
+              <button
+                onClick={handleImportData}
+                className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl"
+                aria-label="Importar dados"
+                type="button"
+              >
                 <Upload className="h-4 w-4" />
                 Importar dados
               </button>
