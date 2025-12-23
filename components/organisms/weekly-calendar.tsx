@@ -17,20 +17,30 @@ export function WeeklyCalendar() {
   const isHydrated = useHydration();
   const { selectedDay, setSelectedDay } = useSelectedDay();
   const { habits, progress } = useHabitsStore();
+  const [centerDay, setCenterDay] = useState<Date | null>(null);
 
-  // Calcula 5 dias sempre com o dia atual centralizado
+  // Inicializa o centerDay apenas na primeira carga (com o dia atual/today)
+  useEffect(() => {
+    if (isHydrated && centerDay === null) {
+      const today = new Date();
+      setCenterDay(today); // Dia atual centralizado na primeira carga
+    }
+  }, [isHydrated, centerDay]);
+
+  // Calcula 5 dias sempre com o centerDay centralizado (independente do selectedDay)
+  // O calendário só se move quando as setas são clicadas
   const weekDays = useMemo(() => {
-    if (!isHydrated) return [];
+    if (!isHydrated || !centerDay) return [];
 
     const days: Date[] = [];
-    // 2 dias antes, dia atual, 2 dias depois = 5 dias total
+    // 2 dias antes, centerDay, 2 dias depois = 5 dias total
     for (let i = -2; i <= 2; i++) {
-      const date = new Date(selectedDay);
+      const date = new Date(centerDay);
       date.setDate(date.getDate() + i);
       days.push(date);
     }
     return days;
-  }, [selectedDay, isHydrated]);
+  }, [centerDay, isHydrated]);
 
   const getDayCompletionData = (day: Date) => {
     const dateString = day.toISOString().split("T")[0];
@@ -59,17 +69,23 @@ export function WeeklyCalendar() {
   };
 
   const goToPreviousWeek = () => {
-    // Avança 5 dias para trás (mostra os 5 dias anteriores)
-    const newDay = new Date(selectedDay);
-    newDay.setDate(newDay.getDate() - 5);
-    setSelectedDay(newDay);
+    // Move o centerDay 5 dias para trás (calendário se move)
+    // O selectedDay não muda - fica independente
+    if (centerDay) {
+      const newCenterDay = new Date(centerDay);
+      newCenterDay.setDate(newCenterDay.getDate() - 5);
+      setCenterDay(newCenterDay);
+    }
   };
 
   const goToNextWeek = () => {
-    // Avança 5 dias para frente (mostra os próximos 5 dias)
-    const newDay = new Date(selectedDay);
-    newDay.setDate(newDay.getDate() + 5);
-    setSelectedDay(newDay);
+    // Move o centerDay 5 dias para frente (calendário se move)
+    // O selectedDay não muda - fica independente
+    if (centerDay) {
+      const newCenterDay = new Date(centerDay);
+      newCenterDay.setDate(newCenterDay.getDate() + 5);
+      setCenterDay(newCenterDay);
+    }
   };
 
   if (!isHydrated) {
