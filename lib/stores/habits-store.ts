@@ -777,6 +777,8 @@ export const useHabitsStore = create<HabitsState>()(
 
       clearAllData: () => {
         // Reseta todos os dados para valores iniciais
+        // Nota: O localStorage já foi removido antes desta função ser chamada
+        // (veja handleClearData em use-settings-actions.ts)
         set({
           habits: [],
           progress: [],
@@ -789,17 +791,6 @@ export const useHabitsStore = create<HabitsState>()(
           pendingOperations: 0,
           skipAutoLoad: true, // Marca para pular carregamento automático
         });
-
-        // Limpa o localStorage específico do store
-        localStorage.removeItem("habits-storage");
-
-        // NÃO remove a flag "habits-mock-data-loaded" porque ela indica que os dados mock
-        // já foram carregados alguma vez. Isso previne que os dados mock sejam carregados
-        // automaticamente novamente após limpar. Eles só podem ser carregados manualmente
-        // através do botão "Carregar dados de exemplo" nas configurações.
-
-        // Limpa sessionStorage também
-        sessionStorage.clear();
       },
 
       syncWithServer: async () => {

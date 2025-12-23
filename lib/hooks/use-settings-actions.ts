@@ -32,20 +32,23 @@ export function useSettingsActions() {
       variant: "danger",
     });
     if (confirmed) {
-      // Usa a função do store para limpar todos os dados
+      // Limpa sessionStorage
+      sessionStorage.clear();
+
+      // Remove o localStorage ANTES de chamar clearAllData
+      // Isso garante que não há dados para o Zustand restaurar
+      localStorage.removeItem("habits-storage");
+      
+      // NÃO remove a flag "habits-mock-data-loaded" porque ela indica que os dados mock
+      // já foram carregados alguma vez. Isso previne que os dados mock sejam carregados
+      // automaticamente novamente após limpar.
+
+      // Chama clearAllData para resetar o estado atual (mesmo que vá recarregar)
       clearAllData();
 
-      // Limpa também outras possíveis chaves relacionadas ao app (caso existam)
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.includes("habit") || key.includes("habits"))) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-
-      // Recarrega a página para garantir que tudo seja resetado
+      // Recarrega a página imediatamente para garantir que tudo seja resetado
+      // Quando a página recarregar, o Zustand fará rehydrate sem dados no localStorage,
+      // então usará os valores iniciais (arrays vazios)
       window.location.href = "/";
     }
   };
