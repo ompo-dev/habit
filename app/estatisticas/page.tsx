@@ -39,8 +39,8 @@ export default function EstatisticasPage() {
 
   return (
     <div className="bg-background pb-24">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg safe-header">
+        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4 safe-area-top">
           <Link
             href="/"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"

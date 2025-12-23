@@ -46,8 +46,11 @@ export function OfflineIndicator() {
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className={cn(
             "fixed top-0 left-0 right-0 z-50 mx-auto max-w-lg",
-            "pointer-events-none"
+            "pointer-events-none safe-header"
           )}
+          style={{
+            paddingTop: "env(safe-area-inset-top, 0px)",
+          }}
         >
           <div
             className={cn(

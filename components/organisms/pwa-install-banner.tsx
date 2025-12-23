@@ -64,9 +64,13 @@ export function PWAInstallBanner() {
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className={cn(
-            "fixed bottom-20 left-0 right-0 z-50 mx-auto max-w-lg px-4",
+            "fixed left-0 right-0 z-50 mx-auto max-w-lg px-4",
             "pointer-events-auto"
           )}
+          style={{
+            bottom: `calc(5rem + env(safe-area-inset-bottom, 0px))`,
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
         >
           <div
             className={cn(

@@ -135,9 +135,9 @@ const HabitsTab = memo(function HabitsTab() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_24px_0_rgba(0,0,0,0.3)]">
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_24px_0_rgba(0,0,0,0.3)] safe-header">
         <div className="border-b border-white/8">
-          <div className="mx-auto flex max-w-lg items-center justify-between px-6 py-4">
+          <div className="mx-auto flex max-w-lg items-center justify-between px-6 py-4 safe-area-top">
             <button
               onClick={openGroupTemplatesModal}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg"
@@ -221,8 +221,8 @@ const StatisticsTab = memo(function StatisticsTab() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg safe-header">
+        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4 safe-area-top">
           <h1 className="text-2xl font-bold text-white">Estatísticas</h1>
         </div>
 
@@ -341,8 +341,8 @@ const SettingsTab = memo(function SettingsTab() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg safe-header">
+        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4 safe-area-top">
           <h1 className="text-2xl font-bold text-white">Configurações</h1>
         </div>
       </header>

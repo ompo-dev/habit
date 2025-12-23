@@ -26,8 +26,8 @@ export function BottomNavigation() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-2xl border-t border-white/[0.1] shadow-[0_-4px_24px_0_rgba(0,0,0,0.3)]">
-      <div className="mx-auto flex max-w-lg items-center justify-around px-4 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-2xl border-t border-white/[0.1] shadow-[0_-4px_24px_0_rgba(0,0,0,0.3)] safe-bottom">
+      <div className="mx-auto flex max-w-lg items-center justify-around px-4 py-2 safe-area-bottom">
         {navItems.map((item) => {
           const isActive = activeTab === item.tab
 
