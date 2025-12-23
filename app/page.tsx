@@ -1,8 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import { WeeklyCalendar } from "@/components/organisms/weekly-calendar";
 import { HabitList } from "@/components/organisms/habit-list";
-import { BottomNavigation } from "@/components/organisms/bottom-navigation";
 import { HabitModal } from "@/components/organisms/habit-modal";
 import { TemplatesModal } from "@/components/organisms/templates-modal";
 import { HabitCreationModal } from "@/components/organisms/habit-creation-modal";
@@ -60,18 +60,21 @@ export default function HomePage() {
         className="bg-background"
         style={{ height: "100vh", overflow: "hidden" }}
       >
-        <Swapper>
-          <HabitsTab />
-          <StatisticsTab />
-          <SettingsTab />
-        </Swapper>
+        <Suspense fallback={null}>
+          <Swapper>
+            <HabitsTab />
+            <StatisticsTab />
+            <SettingsTab />
+          </Swapper>
+        </Suspense>
 
-        <BottomNavigation />
-        <HabitModal />
-        <TemplatesModal />
-        <HabitCreationModal />
-        <GroupTemplatesModal />
-        <GroupCreationModal />
+        <Suspense fallback={null}>
+          <HabitModal />
+          <TemplatesModal />
+          <HabitCreationModal />
+          <GroupTemplatesModal />
+          <GroupCreationModal />
+        </Suspense>
       </div>
     </ClientProviders>
   );

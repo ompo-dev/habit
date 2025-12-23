@@ -1,8 +1,10 @@
 import type React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Suspense } from "react";
+import { BottomNavigation } from "@/components/organisms/bottom-navigation";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -14,13 +16,6 @@ export const metadata: Metadata = {
     "Transforme pequenas tarefas diárias em hábitos sólidos com tracking visual e gamificação",
   generator: "v0.app",
   manifest: "/manifest.json",
-  themeColor: "#6366F1",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   icons: {
     icon: [
       {
@@ -48,6 +43,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#6366F1",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,7 +59,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="dark">
       <body className={`font-sans antialiased min-h-screen`}>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>
+          {children}
+          <Suspense fallback={null}>
+            <BottomNavigation />
+          </Suspense>
+        </NuqsAdapter>
         <Analytics />
       </body>
     </html>

@@ -1,6 +1,4 @@
 "use client";
-
-import { BottomNavigation } from "@/components/organisms/bottom-navigation";
 import {
   ArrowLeft,
   Flame,
@@ -156,8 +154,6 @@ export default function EstatisticasPage() {
           <HabitStatsList />
         </div>
       </main>
-
-      <BottomNavigation />
     </div>
   );
 }

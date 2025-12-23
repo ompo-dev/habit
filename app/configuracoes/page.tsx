@@ -1,6 +1,4 @@
 "use client"
-
-import { BottomNavigation } from "@/components/organisms/bottom-navigation"
 import { ArrowLeft, Download, Upload, Trash2, Database } from "lucide-react"
 import Link from "next/link"
 import { useHabitsStore } from "@/lib/stores/habits-store"
@@ -104,8 +102,6 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
       </main>
-
-      <BottomNavigation />
     </div>
   )
 }
