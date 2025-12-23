@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence, PanInfo } from "framer-motion"
 import { X, Check } from "lucide-react"
 import { cn } from "@/lib/utils/cn"
 import { useHabitsStore } from "@/lib/stores/habits-store"
@@ -84,19 +85,55 @@ export function HabitCustomizationModal({ habitId, isOpen, onClose }: HabitCusto
 
   const IconComponent = (LucideIcons as any)[selectedIcon] as LucideIcon
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+  // Handler para drag - fecha o modal quando arrastar para baixo
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
+    if (info.offset.y > 100 || info.velocity.y > 500) {
+      onClose();
+    }
+  };
 
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={cn(
-          "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
-          "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
-          "animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0",
-          "duration-300",
-        )}
-      >
+  return (
+    <AnimatePresence>
+      {isOpen && habit && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{
+              type: "spring",
+              damping: 30,
+              stiffness: 300,
+            }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.2 }}
+            onDragEnd={handleDragEnd}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
+              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
+              "cursor-grab active:cursor-grabbing"
+            )}
+            style={{ touchAction: "pan-y" }}
+          >
+            {/* Handle para arrastar - indicador visual */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/30" />
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sticky top-0 bg-background pb-4 border-b border-white/10">
           <h2 className="text-2xl font-bold text-white">Personalizar Hábito</h2>
@@ -217,8 +254,10 @@ export function HabitCustomizationModal({ habitId, isOpen, onClose }: HabitCusto
             Salvar
           </button>
         </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

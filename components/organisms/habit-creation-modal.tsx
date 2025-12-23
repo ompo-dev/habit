@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Check, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useHabitsStore } from "@/lib/stores/habits-store";
@@ -208,6 +208,14 @@ export function HabitCreationModal() {
     handleCloseWithCleanup();
   };
 
+  // Handler para drag - fecha o modal quando arrastar para baixo
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Fecha se arrastou para baixo mais de 100px ou com velocidade alta
+    if (info.offset.y > 100 || info.velocity.y > 500) {
+      handleCloseWithCleanup();
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -235,12 +243,20 @@ export function HabitCreationModal() {
               damping: 30,
               stiffness: 300,
             }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.2 }}
+            onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
-              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]"
+              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
+              "cursor-grab active:cursor-grabbing"
             )}
+            style={{ touchAction: "pan-y" }}
           >
+            {/* Handle para arrastar - indicador visual */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/30" />
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
