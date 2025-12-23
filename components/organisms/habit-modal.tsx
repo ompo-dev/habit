@@ -12,6 +12,8 @@ import { useUIStore } from "@/lib/stores/ui-store";
 import { HabitCustomizationModal } from "./habit-customization-modal";
 import { useSelectedHabit } from "@/lib/hooks/use-search-params";
 import { useDialog } from "@/lib/contexts/dialog-context";
+import { useHabitProgress } from "@/lib/hooks/use-habit-progress";
+import { useModalBodyLock } from "@/lib/hooks/use-modal";
 import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -21,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { HabitWithProgress } from "@/lib/types/habit";
 
 export function HabitModal() {
   const { selectedDate } = useUIStore();
@@ -33,38 +36,13 @@ export function HabitModal() {
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+  useModalBodyLock(isOpen);
+  const { getSubtitle } = useHabitProgress(habit as HabitWithProgress);
 
   if (!isOpen || !habit) return null;
 
   const IconComponent =
     ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle;
-
-  const getSubtitle = () => {
-    if (habit.habitType === "counter") {
-      const currentCount = habit.progress?.count || 0;
-      return `${
-        habit.frequency === "daily" ? "Cada dia" : "Semanal"
-      }, ${currentCount}/${habit.targetCount}`;
-    } else if (habit.habitType === "timer") {
-      const currentMinutes = habit.progress?.minutesSpent || 0;
-      return `Timer: ${currentMinutes}/${habit.targetMinutes} minutos`;
-    } else if (habit.habitType === "pomodoro") {
-      const currentSessions = habit.progress?.pomodoroSessions || 0;
-      return `Pomodoro: ${currentSessions}/${habit.targetCount} sessões`;
-    }
-    return "";
-  };
 
   const handleClose = () => {
     closeHabit();
@@ -73,7 +51,8 @@ export function HabitModal() {
   const handleDelete = async () => {
     const confirmed = await confirm({
       title: "Excluir hábito",
-      description: "Tem certeza que deseja excluir este hábito? Esta ação não pode ser desfeita.",
+      description:
+        "Tem certeza que deseja excluir este hábito? Esta ação não pode ser desfeita.",
       confirmText: "Sim, excluir",
       cancelText: "Cancelar",
       variant: "danger",
@@ -179,13 +158,6 @@ export function HabitModal() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg">

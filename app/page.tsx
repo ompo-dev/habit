@@ -9,10 +9,7 @@ import { HabitCreationModal } from "@/components/organisms/habit-creation-modal"
 import { GroupTemplatesModal } from "@/components/organisms/group-templates-modal";
 import { GroupCreationModal } from "@/components/organisms/group-creation-modal";
 import {
-  Menu,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Flame,
   Download,
   Upload,
@@ -20,7 +17,6 @@ import {
   Database,
   Target,
   Calendar,
-  Award,
   BarChart3,
   TrendingUp,
   FolderPlus,
@@ -43,6 +39,7 @@ import {
   useGroupTemplatesModal,
   useHabitTemplatesModal,
 } from "@/lib/hooks/use-search-params";
+import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
 import React from "react";
 import { MonthCalendar } from "@/components/molecules/month-calendar";
 import { YearOverview } from "@/components/molecules/year-overview";
@@ -51,6 +48,10 @@ import { InsightCard } from "@/components/molecules/insight-card";
 import { HabitStatsList } from "@/components/organisms/habit-stats-list";
 import { ProgressChart } from "@/components/molecules/progress-chart";
 import { CategoryStats } from "@/components/molecules/category-stats";
+import { DateHeader } from "@/components/molecules/date-header";
+import { CalendarViewToggle } from "@/components/molecules/calendar-view-toggle";
+import { HighlightsSection } from "@/components/molecules/highlights-section";
+import { SettingsSection } from "@/components/molecules/settings-section";
 import type { HabitCategory } from "@/lib/types/habit";
 
 export default function HomePage() {
@@ -92,15 +93,6 @@ function HabitsTab() {
     setSelectedDate(selectedDay);
   }, [selectedDay, setSelectedDate]);
 
-  const formatDate = (date: Date) => {
-    const day = date.getDate();
-    const month = date
-      .toLocaleDateString("pt-BR", { month: "short" })
-      .replace(".", "");
-    const year = date.getFullYear().toString().slice(-2);
-    return `${day} ${month} ${year}`;
-  };
-
   return (
     <>
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_24px_0_rgba(0,0,0,0.3)]">
@@ -113,33 +105,13 @@ function HabitsTab() {
               <FolderPlus className="h-5 w-5" />
             </button>
 
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={goToPreviousDay}
-                  className="text-white/60 hover:text-white transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <h1 className="text-lg font-bold text-white">
-                  {isToday ? "Hoje" : formatDate(selectedDay)}
-                </h1>
-                <button
-                  onClick={goToNextDay}
-                  className="text-white/60 hover:text-white transition-colors"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-              {!isToday && (
-                <button
-                  onClick={goToToday}
-                  className="text-xs text-primary hover:text-primary/80 transition-colors"
-                >
-                  Voltar para hoje
-                </button>
-              )}
-            </div>
+            <DateHeader
+              date={selectedDay}
+              onPrevious={goToPreviousDay}
+              onNext={goToNextDay}
+              onToday={goToToday}
+              showTodayButton={!isToday}
+            />
 
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1.5">
@@ -199,41 +171,10 @@ function StatisticsTab() {
 
         {/* Controles de visualização do calendário */}
         <div className="mx-auto max-w-lg px-6 pb-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCalendarView("week")}
-              className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium transition-all backdrop-blur-xl border shadow-lg",
-                calendarView === "week"
-                  ? "bg-primary text-white border-primary/40"
-                  : "bg-white/5 text-white/60 hover:bg-white/10 border-white/10"
-              )}
-            >
-              Semana
-            </button>
-            <button
-              onClick={() => setCalendarView("month")}
-              className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium transition-all backdrop-blur-xl border shadow-lg",
-                calendarView === "month"
-                  ? "bg-primary text-white border-primary/40"
-                  : "bg-white/5 text-white/60 hover:bg-white/10 border-white/10"
-              )}
-            >
-              Mês
-            </button>
-            <button
-              onClick={() => setCalendarView("year")}
-              className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium transition-all backdrop-blur-xl border shadow-lg",
-                calendarView === "year"
-                  ? "bg-primary text-white border-primary/40"
-                  : "bg-white/5 text-white/60 hover:bg-white/10 border-white/10"
-              )}
-            >
-              Ano
-            </button>
-          </div>
+          <CalendarViewToggle
+            view={calendarView}
+            onViewChange={setCalendarView}
+          />
         </div>
       </header>
 
@@ -274,45 +215,11 @@ function StatisticsTab() {
         </div>
 
         {/* Destaques */}
-        {(mostConsistent || bestCompletion) && (
-          <div className="mb-6">
-            <h2 className="mb-3 text-lg font-bold text-white">Destaques</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {mostConsistent && (
-                <div className="rounded-2xl bg-linear-to-r from-orange-500/20 to-red-500/20 p-4 border border-orange-500/30 backdrop-blur-xl shadow-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Award className="h-5 w-5 text-orange-400" />
-                    <h3 className="font-semibold text-white">
-                      Mais Consistente
-                    </h3>
-                  </div>
-                  <p className="text-white/80">
-                    {habits.find((h) => h.id === mostConsistent.habitId)?.title}
-                  </p>
-                  <p className="text-sm text-white/60 mt-1">
-                    {mostConsistent.currentStreak} dias de sequência
-                  </p>
-                </div>
-              )}
-              {bestCompletion && (
-                <div className="rounded-2xl bg-linear-to-r from-emerald-500/20 to-cyan-500/20 p-4 border border-emerald-500/30 backdrop-blur-xl shadow-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <TrendingUp className="h-5 w-5 text-emerald-400" />
-                    <h3 className="font-semibold text-white">
-                      Melhor Performance
-                    </h3>
-                  </div>
-                  <p className="text-white/80">
-                    {habits.find((h) => h.id === bestCompletion.habitId)?.title}
-                  </p>
-                  <p className="text-sm text-white/60 mt-1">
-                    {bestCompletion.completionRate}% de conclusão
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <HighlightsSection
+          mostConsistent={mostConsistent}
+          bestCompletion={bestCompletion}
+          habits={habits}
+        />
 
         {/* Progresso da Semana */}
         <div className="mb-6">
@@ -365,37 +272,13 @@ function StatisticsTab() {
 
 // Tab de Configurações
 function SettingsTab() {
-  const { loadMockData, habits, progress } = useHabitsStore();
-  const { confirm, alert } = useDialog();
-
-  const handleLoadMockData = async () => {
-    const confirmed = await confirm({
-      title: "Carregar dados de exemplo",
-      description:
-        "Isso substituirá seus dados atuais por dados de exemplo. Deseja continuar?",
-      confirmText: "Sim, carregar",
-      cancelText: "Cancelar",
-    });
-    if (confirmed) {
-      loadMockData();
-      await alert("Dados de exemplo carregados com sucesso!", "Sucesso");
-    }
-  };
-
-  const handleClearData = async () => {
-    const confirmed = await confirm({
-      title: "Limpar todos os dados",
-      description:
-        "Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.",
-      confirmText: "Sim, limpar",
-      cancelText: "Cancelar",
-      variant: "danger",
-    });
-    if (confirmed) {
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
+  const {
+    handleLoadMockData,
+    handleClearData,
+    handleExportData,
+    handleImportData,
+    stats,
+  } = useSettingsActions();
 
   return (
     <>
@@ -407,24 +290,21 @@ function SettingsTab() {
 
       <main className="mx-auto max-w-lg px-6 py-6">
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
-            <h2 className="font-semibold text-white mb-4">Aparência</h2>
+          <SettingsSection title="Aparência">
             <div className="flex items-center justify-between">
               <span className="text-white/60">Tema</span>
               <span className="text-white">Escuro</span>
             </div>
-          </div>
+          </SettingsSection>
 
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
-            <h2 className="font-semibold text-white mb-4">Notificações</h2>
+          <SettingsSection title="Notificações">
             <div className="flex items-center justify-between">
               <span className="text-white/60">Lembretes</span>
               <span className="text-white">Desativado</span>
             </div>
-          </div>
+          </SettingsSection>
 
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
-            <h2 className="font-semibold text-white mb-4">Desenvolvimento</h2>
+          <SettingsSection title="Desenvolvimento">
             <div className="space-y-3">
               <button
                 onClick={handleLoadMockData}
@@ -439,19 +319,24 @@ function SettingsTab() {
                 </div>
               </button>
             </div>
-          </div>
+          </SettingsSection>
 
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
-            <h2 className="font-semibold text-white mb-4">Dados</h2>
+          <SettingsSection title="Dados">
             <div className="space-y-3">
               <div className="text-sm text-white/60 mb-3">
-                {habits.length} hábitos • {progress.length} registros
+                {stats.habitsCount} hábitos • {stats.progressCount} registros
               </div>
-              <button className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl">
+              <button
+                onClick={handleExportData}
+                className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl"
+              >
                 <Download className="h-4 w-4" />
                 Exportar dados
               </button>
-              <button className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl">
+              <button
+                onClick={handleImportData}
+                className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl"
+              >
                 <Upload className="h-4 w-4" />
                 Importar dados
               </button>
@@ -463,14 +348,14 @@ function SettingsTab() {
                 Limpar todos os dados
               </button>
             </div>
-          </div>
+          </SettingsSection>
 
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
+          <SettingsSection title="">
             <div className="text-center text-white/40 text-sm">
               <p>Habit Builder v1.0.0</p>
               <p className="mt-1">PWA • Next.js 16 • Zustand</p>
             </div>
-          </div>
+          </SettingsSection>
         </div>
       </main>
     </>

@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils/cn"
 import { Badge } from "@/components/atoms/badge"
 import type { HabitWithProgress } from "@/lib/types/habit"
+import { useHabitProgress } from "@/lib/hooks/use-habit-progress"
 import { Check, X, Clock, Timer, Flame } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -15,23 +16,9 @@ interface HabitCardProps {
 }
 
 export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps) {
-  const isCompleted = habit.progress?.completed || false
+  const { progress } = useHabitProgress(habit)
+  const isCompleted = progress.isCompleted
   const IconComponent = (LucideIcons as any)[habit.icon] as LucideIcon || LucideIcons.Circle
-
-  const getProgressText = () => {
-    if (habit.habitType === "counter") {
-      const currentCount = habit.progress?.count || 0
-      const showCount = habit.targetCount > 1
-      return showCount ? `${currentCount}/${habit.targetCount}` : "Cada dia"
-    } else if (habit.habitType === "timer") {
-      const currentMinutes = habit.progress?.minutesSpent || 0
-      return `${currentMinutes}/${habit.targetMinutes} min`
-    } else if (habit.habitType === "pomodoro") {
-      const currentSessions = habit.progress?.pomodoroSessions || 0
-      return `${currentSessions}/${habit.targetCount} sessões`
-    }
-    return "Cada dia"
-  }
 
   const getIcon = () => {
     if (habit.habitType === "timer") return <Clock className="h-4 w-4 text-white/60" />
@@ -66,7 +53,7 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
         <h3 className="font-semibold text-white truncate">{habit.title}</h3>
         <div className="flex items-center gap-2 mt-1">
           {getIcon()}
-          <p className="text-sm text-white/60">{getProgressText()}</p>
+          <p className="text-sm text-white/60">{progress.text}</p>
           {habit.streak > 0 && (
             <Badge variant="warning" className="text-xs flex items-center gap-1">
               <Flame className="h-3 w-3" /> {habit.streak}
@@ -88,7 +75,7 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
           "flex h-12 w-12 items-center justify-center rounded-full transition-all backdrop-blur-lg border",
           isCompleted 
             ? "bg-white/20 text-white border-white/30 shadow-lg" 
-            : "bg-white/[0.08] text-white/40 border-white/[0.12] hover:bg-white/20 hover:text-white hover:border-white/25",
+            : "bg-white/8 text-white/40 border-white/12 hover:bg-white/20 hover:text-white hover:border-white/25",
         )}
       >
         {isCompleted ? <Check className="h-6 w-6" /> : <X className="h-6 w-6" />}

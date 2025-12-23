@@ -13,6 +13,8 @@ import { useModalWithCleanup } from "@/lib/hooks/use-modal";
 import { IconPicker } from "@/components/molecules/icon-picker";
 import { ColorPicker } from "@/components/molecules/color-picker";
 import { PreviewCard } from "@/components/molecules/preview-card";
+import * as LucideIcons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { HabitCategory } from "@/lib/types/habit";
 
 // Lista de ícones populares do Lucide
@@ -202,7 +204,7 @@ export function HabitCreationModal() {
     }
 
     addHabit(newHabit);
-    handleClose();
+    handleCloseWithCleanup();
   };
 
   return (

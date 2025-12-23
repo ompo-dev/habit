@@ -4,8 +4,18 @@ import type { HabitWithProgress, Habit } from "@/lib/types/habit";
 /**
  * Hook para calcular e formatar progresso de um hábito
  */
-export function useHabitProgress(habit: HabitWithProgress) {
+export function useHabitProgress(habit: HabitWithProgress | null) {
   const progress = useMemo(() => {
+    if (!habit) {
+      return {
+        text: "",
+        current: 0,
+        target: 1,
+        percentage: 0,
+        isCompleted: false,
+      };
+    }
+
     if (habit.habitType === "counter") {
       const currentCount = habit.progress?.count || 0;
       const showCount = habit.targetCount > 1;
@@ -47,6 +57,8 @@ export function useHabitProgress(habit: HabitWithProgress) {
   }, [habit]);
 
   const getSubtitle = (): string => {
+    if (!habit) return "";
+    
     if (habit.habitType === "counter") {
       const currentCount = habit.progress?.count || 0;
       return `${

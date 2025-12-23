@@ -11,7 +11,7 @@ import {
 import { useHabitsStore } from "@/lib/stores/habits-store";
 import { useSelectedDay } from "@/lib/hooks/use-search-params";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export function WeeklyCalendar() {
   const { selectedDay, setSelectedDay } = useSelectedDay();
@@ -26,18 +26,6 @@ export function WeeklyCalendar() {
 
   const weekDays = getWeekDays(weekStart);
   const today = new Date();
-
-  const goToPreviousWeek = () => {
-    const newStart = new Date(weekStart);
-    newStart.setDate(newStart.getDate() - 7);
-    setWeekStart(newStart);
-  };
-
-  const goToNextWeek = () => {
-    const newStart = new Date(weekStart);
-    newStart.setDate(newStart.getDate() + 7);
-    setWeekStart(newStart);
-  };
 
   const getDayCompletionData = (day: Date) => {
     const dateString = day.toISOString().split("T")[0];
@@ -64,6 +52,19 @@ export function WeeklyCalendar() {
 
     return { percentage, status };
   };
+
+  const goToPreviousWeek = () => {
+    const newStart = new Date(weekStart);
+    newStart.setDate(newStart.getDate() - 7);
+    setWeekStart(newStart);
+  };
+
+  const goToNextWeek = () => {
+    const newStart = new Date(weekStart);
+    newStart.setDate(newStart.getDate() + 7);
+    setWeekStart(newStart);
+  };
+
 
   return (
     <div className="flex items-center justify-between gap-1 sm:gap-3">

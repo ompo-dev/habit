@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Plus, Minus } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useHabitsStore } from "@/lib/stores/habits-store";
 import {
   useGroupCreationModal,
   useGroupTemplatesModal,
 } from "@/lib/hooks/use-search-params";
-import * as LucideIcons from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { useModalWithCleanup } from "@/lib/hooks/use-modal";
+import { IconPicker } from "@/components/molecules/icon-picker";
+import { ColorPicker } from "@/components/molecules/color-picker";
+import { PreviewCard } from "@/components/molecules/preview-card";
 import type { GroupTemplate } from "@/lib/utils/group-templates";
 
 // Lista de ícones populares do Lucide
@@ -101,26 +103,16 @@ export function GroupCreationModal() {
     }
   }, [editingGroupId, isOpen, getGroupById]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+  const { handleClose: handleCloseWithCleanup } = useModalWithCleanup(
+    isOpen,
+    "selectedGroupTemplate",
+    () => {
+      closeModal();
+      closeTemplatesModal();
     }
-
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+  );
 
   if (!isOpen) return null;
-
-  const handleClose = () => {
-    closeModal();
-    closeTemplatesModal();
-    // Limpa template do sessionStorage
-    sessionStorage.removeItem("selectedGroupTemplate");
-  };
 
   const handleSave = async () => {
     if (editingGroupId) {
@@ -136,15 +128,13 @@ export function GroupCreationModal() {
         color: selectedColor,
       });
     }
-    handleClose();
+    handleCloseWithCleanup();
   };
-
-  const IconComponent = (LucideIcons as any)[selectedIcon] as LucideIcon;
 
   return (
     <div
       className="fixed inset-0 z-60 flex items-end justify-center sm:items-center"
-      onClick={handleClose}
+      onClick={handleCloseWithCleanup}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
 
@@ -186,38 +176,19 @@ export function GroupCreationModal() {
         </div>
 
         {/* Preview */}
-        <div className="mb-6 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-lg">
-          <p className="text-sm text-white/60 mb-3">Preview</p>
-          <div className="flex items-center gap-4">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl backdrop-blur-xl border shadow-lg"
-              style={{
-                backgroundColor: selectedColor + "30",
-                borderColor: selectedColor + "50",
-              }}
-            >
-              {IconComponent && (
-                <IconComponent
-                  className="h-8 w-8"
-                  style={{ color: selectedColor }}
-                />
-              )}
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-white">
-                {name || "Nome do grupo"}
-              </h3>
-              <p className="text-sm text-white/60">
-                {(() => {
-                  const saved = sessionStorage.getItem("selectedGroupTemplate");
-                  return saved
-                    ? JSON.parse(saved).description
-                    : "Organize seus hábitos";
-                })()}
-              </p>
-            </div>
-          </div>
-        </div>
+        <PreviewCard
+          icon={selectedIcon}
+          title={name}
+          subtitle={
+            (() => {
+              const saved = sessionStorage.getItem("selectedGroupTemplate");
+              return saved
+                ? JSON.parse(saved).description
+                : "Organize seus hábitos";
+            })()
+          }
+          color={selectedColor}
+        />
 
         {/* Nome */}
         <div className="mb-6">
@@ -238,32 +209,11 @@ export function GroupCreationModal() {
           <label className="block text-sm font-medium text-white mb-3">
             Ícone *
           </label>
-          <div className="grid grid-cols-6 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto p-2 rounded-xl bg-white/5 border border-white/10">
-            {POPULAR_ICONS.map((iconName) => {
-              const Icon = (LucideIcons as any)[iconName] as LucideIcon;
-              const isSelected = selectedIcon === iconName;
-
-              return (
-                <button
-                  key={iconName}
-                  onClick={() => setSelectedIcon(iconName)}
-                  className={cn(
-                    "relative flex h-12 w-12 items-center justify-center rounded-xl transition-all backdrop-blur-xl border",
-                    isSelected
-                      ? "bg-white/20 ring-2 ring-white/50 border-white/30"
-                      : "bg-white/5 hover:bg-white/10 border-white/10"
-                  )}
-                >
-                  {Icon && <Icon className="h-5 w-5 text-white" />}
-                  {isSelected && (
-                    <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 shadow-lg">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <IconPicker
+            icons={POPULAR_ICONS}
+            selectedIcon={selectedIcon}
+            onSelect={setSelectedIcon}
+          />
         </div>
 
         {/* Cores */}
@@ -271,35 +221,13 @@ export function GroupCreationModal() {
           <label className="block text-sm font-medium text-white mb-3">
             Cor *
           </label>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-            {COLORS.map((color) => {
-              const isSelected = selectedColor === color.value;
-
-              return (
-                <button
-                  key={color.value}
-                  onClick={() => setSelectedColor(color.value)}
-                  className={cn(
-                    "relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all backdrop-blur-xl border",
-                    isSelected
-                      ? "bg-white/20 ring-2 ring-white/50 border-white/30"
-                      : "bg-white/5 hover:bg-white/10 border-white/10"
-                  )}
-                >
-                  <div
-                    className="h-10 w-10 rounded-lg shadow-lg"
-                    style={{ backgroundColor: color.value }}
-                  />
-                  <span className="text-xs text-white/80">{color.name}</span>
-                  {isSelected && (
-                    <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 shadow-lg">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <ColorPicker
+            colors={COLORS}
+            selectedColor={selectedColor}
+            onSelect={(color) =>
+              setSelectedColor(typeof color === "string" ? color : color.primary)
+            }
+          />
         </div>
 
         {/* Espaçamento final */}
