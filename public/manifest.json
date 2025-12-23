@@ -10,6 +10,7 @@
   "orientation": "portrait",
   "dir": "ltr",
   "lang": "pt-BR",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon.svg",
