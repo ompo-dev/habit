@@ -14,9 +14,9 @@ import {
   useHabitTemplatesModal,
 } from "@/lib/hooks/use-search-params";
 import { useHydratedValue } from "@/lib/hooks/use-hydration";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo, useMemo } from "react";
 
-export function HabitList() {
+export const HabitList = memo(function HabitList() {
   const { selectedDate } = useUIStore();
   const {
     getHabitsWithProgress,
@@ -57,7 +57,12 @@ export function HabitList() {
     () => getHabitsWithProgress(selectedDate),
     []
   );
-  const ungroupedHabits = allHabits.filter((h) => !h.groupId);
+  
+  // Memoiza ungroupedHabits para evitar recálculos desnecessários
+  const ungroupedHabits = useMemo(
+    () => allHabits.filter((h) => !h.groupId),
+    [allHabits]
+  );
 
   // Abre todos os grupos por padrão na primeira renderização
   useEffect(() => {
@@ -76,8 +81,8 @@ export function HabitList() {
 
   if (allHabits.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16">
-        <Target className="h-16 w-16 text-white/20" />
+      <div className="flex flex-col items-center justify-center gap-4 py-16" role="status" aria-live="polite">
+        <Target className="h-16 w-16 text-white/20" aria-hidden="true" />
         <p className="text-center text-white/60">
           Nenhum hábito criado ainda.
           <br />
@@ -174,8 +179,10 @@ export function HabitList() {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => handleAddToGroup(group.id)}
                           className="flex-1 flex items-center justify-center gap-2 rounded-2xl p-4 transition-all backdrop-blur-xl border border-dashed border-white/20 hover:border-primary/40 hover:bg-primary/10 text-white/60 hover:text-primary"
+                          aria-label={`Adicionar hábito ao grupo ${group.name}`}
+                          type="button"
                         >
-                          <Plus className="h-5 w-5" />
+                          <Plus className="h-5 w-5" aria-hidden="true" />
                           <span className="text-sm font-medium">
                             Adicionar hábito
                           </span>
@@ -187,9 +194,10 @@ export function HabitList() {
                             handleDeleteGroup(group.id, group.name)
                           }
                           className="flex items-center justify-center gap-2 rounded-2xl p-4 transition-all backdrop-blur-xl border border-dashed border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10 text-red-500/60 hover:text-red-500"
-                          title={`Excluir grupo "${group.name}"`}
+                          aria-label={`Excluir grupo ${group.name}`}
+                          type="button"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-5 w-5" aria-hidden="true" />
                         </motion.button>
                       </motion.div>
                     </>
@@ -208,8 +216,10 @@ export function HabitList() {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleAddToGroup(group.id)}
                           className="inline-flex items-center gap-2 rounded-full px-6 py-3 transition-all bg-primary/20 hover:bg-primary/30 border-2 border-primary/40 text-white font-medium"
+                          aria-label={`Adicionar primeiro hábito ao grupo ${group.name}`}
+                          type="button"
                         >
-                          <Plus className="h-5 w-5" />
+                          <Plus className="h-5 w-5" aria-hidden="true" />
                           Adicionar primeiro hábito
                         </motion.button>
                         <motion.button
@@ -219,9 +229,10 @@ export function HabitList() {
                             handleDeleteGroup(group.id, group.name)
                           }
                           className="flex items-center justify-center rounded-full p-3 transition-all bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/40 text-red-500 hover:text-red-400"
-                          title={`Excluir grupo "${group.name}"`}
+                          aria-label={`Excluir grupo ${group.name}`}
+                          type="button"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-5 w-5" aria-hidden="true" />
                         </motion.button>
                       </div>
                     </motion.div>
@@ -258,4 +269,4 @@ export function HabitList() {
       )}
     </motion.div>
   );
-}
+});

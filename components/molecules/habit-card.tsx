@@ -49,6 +49,15 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
           : habit.color + "30"
       }}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`${habit.title}, ${isCompleted ? 'completo' : 'não completo'}, ${progress.text}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
       <div
         className="flex h-12 w-12 items-center justify-center rounded-xl backdrop-blur-lg border transition-all duration-300"
@@ -60,6 +69,7 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
             ? habit.color + "60"
             : habit.color + "40"
         }}
+        aria-hidden="true"
       >
         <IconComponent className="h-6 w-6" style={{ color: habit.color }} />
       </div>
@@ -72,7 +82,7 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
           {habit.title}
         </h3>
         <div className="flex items-center gap-2 mt-1">
-          {getIcon()}
+          {getIcon() && <span aria-hidden="true">{getIcon()}</span>}
           <p className={cn(
             "text-sm transition-opacity duration-300",
             isCompleted ? "text-white/50" : "text-white/60"
@@ -80,8 +90,8 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
             {progress.text}
           </p>
           {habit.streak > 0 && (
-            <Badge variant="warning" className="text-xs flex items-center gap-1">
-              <Flame className="h-3 w-3" /> {habit.streak}
+            <Badge variant="warning" className="text-xs flex items-center gap-1" aria-label={`Sequência de ${habit.streak} dias`}>
+              <Flame className="h-3 w-3" aria-hidden="true" /> {habit.streak}
             </Badge>
           )}
         </div>
@@ -104,6 +114,8 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
             ? "bg-white/20 text-white border-white/30 shadow-lg" 
             : "bg-white/8 text-white/40 border-white/12 hover:bg-white/20 hover:text-white hover:border-white/25",
         )}
+        aria-label={isCompleted ? `Desfazer conclusão de ${habit.title}` : `Marcar ${habit.title} como completo`}
+        type="button"
       >
         <AnimatePresence mode="wait">
           {isCompleted ? (
@@ -114,7 +126,7 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
               exit={{ scale: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Check className="h-6 w-6" />
+              <Check className="h-6 w-6" aria-hidden="true" />
             </motion.div>
           ) : (
             <motion.div
@@ -124,7 +136,7 @@ export function HabitCard({ habit, onClick, onComplete, onUndo }: HabitCardProps
               exit={{ scale: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <X className="h-6 w-6" />
+              <X className="h-6 w-6" aria-hidden="true" />
             </motion.div>
           )}
         </AnimatePresence>

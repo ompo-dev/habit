@@ -41,8 +41,11 @@ export function BottomNavigation() {
                   ? "bg-primary/20 text-primary border border-primary/30 shadow-lg" 
                   : "text-white/40 hover:text-white/60 hover:bg-white/5",
               )}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
+              type="button"
             >
-              {item.icon}
+              <span aria-hidden="true">{item.icon}</span>
               <span className="text-xs font-medium">{item.label}</span>
             </button>
           )

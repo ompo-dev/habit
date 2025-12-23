@@ -125,6 +125,8 @@
     overflow-y: scroll;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE e Edge */
+    /* Otimização: melhora performance de scroll */
+    -webkit-overflow-scrolling: touch;
   }
   html::-webkit-scrollbar {
     display: none; /* Chrome, Safari e Opera */
@@ -134,6 +136,12 @@
     overflow-y: scroll;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE e Edge */
+    /* Otimização: melhora performance de scroll */
+    -webkit-overflow-scrolling: touch;
+    /* Otimização: reduz layout shifts */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body::-webkit-scrollbar {
     display: none; /* Chrome, Safari e Opera */
@@ -145,10 +153,19 @@
 * {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE e Edge */
+  /* Otimização: melhora performance de animações */
+  will-change: auto;
 }
 
 *::-webkit-scrollbar {
   display: none; /* Chrome, Safari e Opera */
+}
+
+/* Otimização: melhora performance de elementos com transform */
+[data-framer-motion] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .scrollbar-none::-webkit-scrollbar {

@@ -41,6 +41,10 @@ export const metadata: Metadata = {
       },
     ],
   },
+  // Otimizações de performance
+  other: {
+    "dns-prefetch": "on",
+  },
 };
 
 export const viewport: Viewport = {
@@ -58,6 +62,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="dark">
+      <head>
+        {/* Preconnect para melhorar performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+      </head>
       <body className={`font-sans antialiased min-h-screen`}>
         <NuqsAdapter>
           {children}

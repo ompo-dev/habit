@@ -1,13 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
-import { WeeklyCalendar } from "@/components/organisms/weekly-calendar";
-import { HabitList } from "@/components/organisms/habit-list";
-import { HabitModal } from "@/components/organisms/habit-modal";
-import { TemplatesModal } from "@/components/organisms/templates-modal";
-import { HabitCreationModal } from "@/components/organisms/habit-creation-modal";
-import { GroupTemplatesModal } from "@/components/organisms/group-templates-modal";
-import { GroupCreationModal } from "@/components/organisms/group-creation-modal";
+import { Suspense, lazy, memo } from "react";
 import {
   Plus,
   Flame,
@@ -38,18 +31,61 @@ import {
 } from "@/lib/hooks/use-search-params";
 import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
 import React from "react";
-import { MonthCalendar } from "@/components/molecules/month-calendar";
-import { YearOverview } from "@/components/molecules/year-overview";
-import { StatCard } from "@/components/molecules/stat-card";
-import { HabitStatsList } from "@/components/organisms/habit-stats-list";
-import { ProgressChart } from "@/components/molecules/progress-chart";
-import { CategoryStats } from "@/components/molecules/category-stats";
-import { DateHeader } from "@/components/molecules/date-header";
-import { CalendarViewToggle } from "@/components/molecules/calendar-view-toggle";
-import { HighlightsSection } from "@/components/molecules/highlights-section";
-import { SettingsSection } from "@/components/molecules/settings-section";
 import { Swapper } from "@/components/organisms/swapper";
 import type { HabitCategory } from "@/lib/types/habit";
+
+// Lazy loading de componentes pesados para melhorar performance inicial
+const WeeklyCalendar = lazy(() => 
+  import("@/components/organisms/weekly-calendar").then(m => ({ default: m.WeeklyCalendar }))
+);
+const HabitList = lazy(() => 
+  import("@/components/organisms/habit-list").then(m => ({ default: m.HabitList }))
+);
+const HabitModal = lazy(() => 
+  import("@/components/organisms/habit-modal").then(m => ({ default: m.HabitModal }))
+);
+const TemplatesModal = lazy(() => 
+  import("@/components/organisms/templates-modal").then(m => ({ default: m.TemplatesModal }))
+);
+const HabitCreationModal = lazy(() => 
+  import("@/components/organisms/habit-creation-modal").then(m => ({ default: m.HabitCreationModal }))
+);
+const GroupTemplatesModal = lazy(() => 
+  import("@/components/organisms/group-templates-modal").then(m => ({ default: m.GroupTemplatesModal }))
+);
+const GroupCreationModal = lazy(() => 
+  import("@/components/organisms/group-creation-modal").then(m => ({ default: m.GroupCreationModal }))
+);
+const MonthCalendar = lazy(() => 
+  import("@/components/molecules/month-calendar").then(m => ({ default: m.MonthCalendar }))
+);
+const YearOverview = lazy(() => 
+  import("@/components/molecules/year-overview").then(m => ({ default: m.YearOverview }))
+);
+const StatCard = lazy(() => 
+  import("@/components/molecules/stat-card").then(m => ({ default: m.StatCard }))
+);
+const HabitStatsList = lazy(() => 
+  import("@/components/organisms/habit-stats-list").then(m => ({ default: m.HabitStatsList }))
+);
+const ProgressChart = lazy(() => 
+  import("@/components/molecules/progress-chart").then(m => ({ default: m.ProgressChart }))
+);
+const CategoryStats = lazy(() => 
+  import("@/components/molecules/category-stats").then(m => ({ default: m.CategoryStats }))
+);
+const DateHeader = lazy(() => 
+  import("@/components/molecules/date-header").then(m => ({ default: m.DateHeader }))
+);
+const CalendarViewToggle = lazy(() => 
+  import("@/components/molecules/calendar-view-toggle").then(m => ({ default: m.CalendarViewToggle }))
+);
+const HighlightsSection = lazy(() => 
+  import("@/components/molecules/highlights-section").then(m => ({ default: m.HighlightsSection }))
+);
+const SettingsSection = lazy(() => 
+  import("@/components/molecules/settings-section").then(m => ({ default: m.SettingsSection }))
+);
 
 export default function HomePage() {
   useHabitData(); // Carrega dados mock automaticamente
@@ -60,7 +96,7 @@ export default function HomePage() {
         className="bg-background"
         style={{ height: "100vh", overflow: "hidden" }}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen" role="status" aria-label="Carregando aplicação"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
           <Swapper>
             <HabitsTab />
             <StatisticsTab />
@@ -80,8 +116,8 @@ export default function HomePage() {
   );
 }
 
-// Tab de Hábitos
-function HabitsTab() {
+// Tab de Hábitos - Memoizado para evitar re-renders desnecessários
+const HabitsTab = memo(function HabitsTab() {
   const { getTotalStreak } = useHabitsStore();
   const { setSelectedDate } = useUIStore();
   const { open: openGroupTemplatesModal } = useGroupTemplatesModal();
@@ -105,8 +141,10 @@ function HabitsTab() {
             <button
               onClick={openGroupTemplatesModal}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10 shadow-lg"
+              aria-label="Abrir templates de grupos"
+              type="button"
             >
-              <FolderPlus className="h-5 w-5" />
+              <FolderPlus className="h-5 w-5" aria-hidden="true" />
             </button>
 
             <DateHeader
@@ -126,8 +164,10 @@ function HabitsTab() {
               <button
                 onClick={openHabitTemplatesModal}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/90 transition-all shadow-lg"
+                aria-label="Criar novo hábito"
+                type="button"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -139,17 +179,19 @@ function HabitsTab() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-6 py-6 pb-24">
+      <main className="mx-auto max-w-lg px-6 py-6 pb-24" role="main" aria-label="Lista de hábitos">
         <div>
-          <HabitList />
+          <Suspense fallback={<div className="flex items-center justify-center py-8" role="status" aria-label="Carregando hábitos"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div></div>}>
+            <HabitList />
+          </Suspense>
         </div>
       </main>
     </>
   );
-}
+});
 
-// Tab de Estatísticas
-function StatisticsTab() {
+// Tab de Estatísticas - Memoizado para evitar re-renders desnecessários
+const StatisticsTab = memo(function StatisticsTab() {
   const statistics = useHabitStatistics();
   const { last7DaysProgress } = useProgressData();
   const { habits } = useHabitsStore();
@@ -193,54 +235,68 @@ function StatisticsTab() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-6 py-6 pb-24">
+      <main className="mx-auto max-w-lg px-6 py-6 pb-24" role="main" aria-label="Estatísticas">
         {/* Calendário */}
         <div className="mb-6">
-          {calendarView === "week" && <WeeklyCalendar />}
-          {calendarView === "month" && <MonthCalendar />}
-          {calendarView === "year" && <YearOverview />}
+          <Suspense fallback={<div className="h-32 bg-white/5 rounded-2xl animate-pulse" />}>
+            {calendarView === "week" && <WeeklyCalendar />}
+            {calendarView === "month" && <MonthCalendar />}
+            {calendarView === "year" && <YearOverview />}
+          </Suspense>
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="mb-6 grid grid-cols-2 gap-3">
-          <StatCard
-            icon={<Flame className="h-5 w-5 text-orange-400" />}
-            label="Streak Total"
-            value={hydratedTotalStreak}
-            color="bg-orange-500/20"
-          />
-          <StatCard
-            icon={<Target className="h-5 w-5 text-emerald-400" />}
-            label="Taxa Hoje"
-            value={`${hydratedCompletionRate}%`}
-            color="bg-emerald-500/20"
-          />
-          <StatCard
-            icon={<TrendingUp className="h-5 w-5 text-blue-400" />}
-            label="Esta Semana"
-            value={hydratedWeekCompletions}
-            color="bg-blue-500/20"
-          />
-          <StatCard
-            icon={<Calendar className="h-5 w-5 text-purple-400" />}
-            label="Este Mês"
-            value={hydratedMonthCompletions}
-            color="bg-purple-500/20"
-          />
+        <div className="mb-6 grid grid-cols-2 gap-3" role="region" aria-label="Estatísticas rápidas">
+          <Suspense fallback={<div className="h-24 bg-white/5 rounded-2xl animate-pulse" />}>
+            <StatCard
+              icon={<Flame className="h-5 w-5 text-orange-400" aria-hidden="true" />}
+              label="Streak Total"
+              value={hydratedTotalStreak}
+              color="bg-orange-500/20"
+            />
+          </Suspense>
+          <Suspense fallback={<div className="h-24 bg-white/5 rounded-2xl animate-pulse" />}>
+            <StatCard
+              icon={<Target className="h-5 w-5 text-emerald-400" aria-hidden="true" />}
+              label="Taxa Hoje"
+              value={`${hydratedCompletionRate}%`}
+              color="bg-emerald-500/20"
+            />
+          </Suspense>
+          <Suspense fallback={<div className="h-24 bg-white/5 rounded-2xl animate-pulse" />}>
+            <StatCard
+              icon={<TrendingUp className="h-5 w-5 text-blue-400" aria-hidden="true" />}
+              label="Esta Semana"
+              value={hydratedWeekCompletions}
+              color="bg-blue-500/20"
+            />
+          </Suspense>
+          <Suspense fallback={<div className="h-24 bg-white/5 rounded-2xl animate-pulse" />}>
+            <StatCard
+              icon={<Calendar className="h-5 w-5 text-purple-400" aria-hidden="true" />}
+              label="Este Mês"
+              value={hydratedMonthCompletions}
+              color="bg-purple-500/20"
+            />
+          </Suspense>
         </div>
 
         {/* Destaques */}
-        <HighlightsSection
-          mostConsistent={mostConsistent}
-          bestCompletion={bestCompletion}
-          habits={habits}
-        />
+        <Suspense fallback={<div className="h-32 bg-white/5 rounded-2xl animate-pulse mb-6" />}>
+          <HighlightsSection
+            mostConsistent={mostConsistent}
+            bestCompletion={bestCompletion}
+            habits={habits}
+          />
+        </Suspense>
 
         {/* Progresso da Semana */}
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-white">Últimos 7 Dias</h2>
           <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
-            <ProgressChart data={last7DaysProgress} />
+            <Suspense fallback={<div className="h-48 bg-white/5 rounded-xl animate-pulse" />}>
+              <ProgressChart data={last7DaysProgress} />
+            </Suspense>
           </div>
         </div>
 
@@ -271,10 +327,10 @@ function StatisticsTab() {
       </main>
     </>
   );
-}
+});
 
-// Tab de Configurações
-function SettingsTab() {
+// Tab de Configurações - Memoizado para evitar re-renders desnecessários
+const SettingsTab = memo(function SettingsTab() {
   const {
     handleLoadMockData,
     handleClearData,
@@ -312,8 +368,10 @@ function SettingsTab() {
               <button
                 onClick={handleLoadMockData}
                 className="flex w-full items-center gap-3 rounded-lg bg-primary/20 p-3 text-white hover:bg-primary/30 transition-all backdrop-blur-xl border border-primary/30 shadow-lg"
+                aria-label="Carregar dados de exemplo"
+                type="button"
               >
-                <Database className="h-5 w-5" />
+                <Database className="h-5 w-5" aria-hidden="true" />
                 <div className="flex-1 text-left">
                   <div className="font-medium">Carregar dados de exemplo</div>
                   <div className="text-xs text-white/60">
@@ -332,22 +390,28 @@ function SettingsTab() {
               <button
                 onClick={handleExportData}
                 className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl"
+                aria-label="Exportar dados"
+                type="button"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4" aria-hidden="true" />
                 Exportar dados
               </button>
               <button
                 onClick={handleImportData}
                 className="flex w-full items-center gap-3 text-left text-white/60 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10 backdrop-blur-xl"
+                aria-label="Importar dados"
+                type="button"
               >
-                <Upload className="h-4 w-4" />
+                <Upload className="h-4 w-4" aria-hidden="true" />
                 Importar dados
               </button>
               <button
                 onClick={handleClearData}
                 className="flex w-full items-center gap-3 text-left text-red-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10 backdrop-blur-xl"
+                aria-label="Limpar todos os dados"
+                type="button"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Limpar todos os dados
               </button>
             </div>
@@ -363,4 +427,4 @@ function SettingsTab() {
       </main>
     </>
   );
-}
+});

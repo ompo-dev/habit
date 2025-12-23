@@ -26,38 +26,78 @@ export function Swapper({ children, className }: SwapperProps) {
   // Calcula a posição base em pixels baseada no índice atual
   const baseX = useMotionValue(0);
 
+  // Cache para evitar múltiplas leituras de offsetWidth (forced reflow)
+  const widthCache = useRef<number | null>(null);
+
   // Sincroniza a posição base quando a tab muda com animação
   useEffect(() => {
-    const width = containerRef.current?.offsetWidth || 0;
-    const targetX = -currentIndex * width;
+    let controls: ReturnType<typeof animate> | null = null;
+    
+    // Usa requestAnimationFrame para evitar forced reflow
+    const rafId = requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+      
+      // Usa cache se disponível, senão lê e cacheia
+      if (widthCache.current === null) {
+        widthCache.current = containerRef.current.offsetWidth;
+      }
+      
+      const width = widthCache.current;
+      const targetX = -currentIndex * width;
 
-    // Anima a posição base suavemente usando a função animate do framer-motion
-    const controls = animate(baseX, targetX, {
-      type: "spring",
-      stiffness: 300,
-      damping: 30,
+      // Anima a posição base suavemente usando a função animate do framer-motion
+      controls = animate(baseX, targetX, {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      });
+
+      // Reseta o offset do drag
+      x.set(0);
+
+      // Reseta o scroll da tela atual para o topo quando trocar de tela
+      // Usa requestAnimationFrame para evitar forced reflow
+      requestAnimationFrame(() => {
+        const currentTabElement = containerRef.current?.querySelector(
+          `[data-tab-index="${currentIndex}"]`
+        ) as HTMLElement;
+        if (currentTabElement) {
+          currentTabElement.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
     });
 
-    // Reseta o offset do drag
-    x.set(0);
-
-    // Reseta o scroll da tela atual para o topo quando trocar de tela
-    const currentTabElement = containerRef.current?.querySelector(
-      `[data-tab-index="${currentIndex}"]`
-    ) as HTMLElement;
-    if (currentTabElement) {
-      currentTabElement.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    return () => controls.stop();
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (controls) {
+        controls.stop();
+      }
+    };
   }, [activeTab, currentIndex, baseX, x]);
+
+  // Atualiza cache quando a janela é redimensionada
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        widthCache.current = containerRef.current.offsetWidth;
+      }
+    };
+
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Calcula o índice baseado na posição X
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    const width = containerRef.current?.offsetWidth || 0;
+    // Usa cache para evitar forced reflow
+    const width = widthCache.current || containerRef.current?.offsetWidth || 0;
+    if (widthCache.current === null && containerRef.current) {
+      widthCache.current = containerRef.current.offsetWidth;
+    }
+    
     const threshold = width * 0.3; // 30% da largura para trocar
     const velocity = info.velocity.x;
     let newIndex = currentIndex;
@@ -97,7 +137,12 @@ export function Swapper({ children, className }: SwapperProps) {
 
   // Calcula as constraints de drag baseado no índice atual
   const dragConstraints = useMemo(() => {
-    const width = containerRef.current?.offsetWidth || 0;
+    // Usa cache para evitar forced reflow
+    const width = widthCache.current || containerRef.current?.offsetWidth || 0;
+    if (widthCache.current === null && containerRef.current) {
+      widthCache.current = containerRef.current.offsetWidth;
+    }
+    
     if (currentIndex === 0) {
       return { left: -width, right: 0 };
     } else if (currentIndex === TABS_ORDER.length - 1) {
@@ -132,6 +177,8 @@ export function Swapper({ children, className }: SwapperProps) {
           display: "flex",
           width: "100%",
           height: "100%",
+          // Otimização: usa transform em vez de position para melhor performance
+          transform: "translateZ(0)",
         }}
       >
         {children.map((child, index) => (
