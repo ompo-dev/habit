@@ -5,7 +5,7 @@ import { useDialog } from "@/lib/contexts/dialog-context";
  * Hook para ações de configurações
  */
 export function useSettingsActions() {
-  const { loadMockData, habits, progress, groups, importData } = useHabitsStore();
+  const { loadMockData, habits, progress, groups, importData, clearAllData } = useHabitsStore();
   const { confirm, alert } = useDialog();
 
   const handleLoadMockData = async () => {
@@ -32,8 +32,21 @@ export function useSettingsActions() {
       variant: "danger",
     });
     if (confirmed) {
-      localStorage.clear();
-      window.location.reload();
+      // Usa a função do store para limpar todos os dados
+      clearAllData();
+
+      // Limpa também outras possíveis chaves relacionadas ao app (caso existam)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes("habit") || key.includes("habits"))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // Recarrega a página para garantir que tudo seja resetado
+      window.location.href = "/";
     }
   };
 

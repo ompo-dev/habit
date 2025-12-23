@@ -29,6 +29,7 @@ interface HabitsState {
   isLoading: boolean;
   currentDate: Date;
   groups: HabitGroup[];
+  skipAutoLoad: boolean; // Flag para pular carregamento automático de dados mock
 
   // Estado de sincronização
   isSyncing: boolean;
@@ -91,7 +92,14 @@ interface HabitsState {
   loadMockData: () => void;
 
   // Import/Export
-  importData: (data: { habits: Habit[]; progress: Progress[]; groups?: HabitGroup[] }) => void;
+  importData: (data: {
+    habits: Habit[];
+    progress: Progress[];
+    groups?: HabitGroup[];
+  }) => void;
+
+  // Clear Data
+  clearAllData: () => void;
 
   // Sync
   syncWithServer: () => Promise<void>;
@@ -109,6 +117,7 @@ export const useHabitsStore = create<HabitsState>()(
       isSyncing: false,
       lastSync: null,
       pendingOperations: 0,
+      skipAutoLoad: false,
 
       // OPTIMISTIC UPDATE: Adicionar hábito
       addHabit: async (habitData) => {
@@ -726,6 +735,7 @@ export const useHabitsStore = create<HabitsState>()(
           habits,
           progress,
           groups: mockData.groups || [],
+          skipAutoLoad: false, // Reseta a flag ao carregar dados manualmente
         });
       },
 
@@ -733,7 +743,8 @@ export const useHabitsStore = create<HabitsState>()(
         // Converte strings de data para objetos Date
         const habits = (data.habits || []).map((h: any) => ({
           ...h,
-          createdAt: h.createdAt instanceof Date ? h.createdAt : new Date(h.createdAt),
+          createdAt:
+            h.createdAt instanceof Date ? h.createdAt : new Date(h.createdAt),
         }));
 
         const progress = (data.progress || []).map((p: any) => ({
@@ -747,16 +758,40 @@ export const useHabitsStore = create<HabitsState>()(
 
         const groups = (data.groups || []).map((g: any) => ({
           ...g,
-          createdAt: g.createdAt instanceof Date ? g.createdAt : new Date(g.createdAt),
+          createdAt:
+            g.createdAt instanceof Date ? g.createdAt : new Date(g.createdAt),
         }));
 
         set({
           habits,
           progress,
           groups,
+          skipAutoLoad: false, // Reseta a flag ao importar dados
         });
 
         toast.success("Dados importados com sucesso!");
+      },
+
+      clearAllData: () => {
+        // Reseta todos os dados para valores iniciais
+        set({
+          habits: [],
+          progress: [],
+          groups: [],
+          currentDate: new Date(),
+          selectedHabitId: null,
+          isLoading: false,
+          isSyncing: false,
+          lastSync: null,
+          pendingOperations: 0,
+          skipAutoLoad: true, // Marca para pular carregamento automático
+        });
+
+        // Limpa o localStorage específico do store
+        localStorage.removeItem("habits-storage");
+
+        // Limpa sessionStorage também
+        sessionStorage.clear();
       },
 
       syncWithServer: async () => {
@@ -790,6 +825,7 @@ export const useHabitsStore = create<HabitsState>()(
         progress: state.progress,
         groups: state.groups,
         currentDate: state.currentDate,
+        skipAutoLoad: state.skipAutoLoad,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

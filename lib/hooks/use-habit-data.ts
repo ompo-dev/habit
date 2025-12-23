@@ -1,32 +1,35 @@
-import { useEffect, useMemo } from "react"
-import { useHabitsStore } from "@/lib/stores/habits-store"
+import { useEffect, useMemo } from "react";
+import { useHabitsStore } from "@/lib/stores/habits-store";
 
 /**
  * Hook para carregar e processar dados de hábitos do JSON mock
  * Transforma os dados brutos em objetos tipados e inicializa o store
  */
 export function useHabitData() {
-  const { habits, loadMockData } = useHabitsStore()
+  const { habits, loadMockData, skipAutoLoad } = useHabitsStore();
 
   useEffect(() => {
     // Aguarda um tick para garantir que o persist hydrate já aconteceu
     const timer = setTimeout(() => {
-      // Carrega dados mock se ainda não houver hábitos
-      if (habits.length === 0) {
-        console.log('🔄 Carregando dados mock...')
-        loadMockData()
+      // Carrega dados mock apenas se não houver hábitos E não estiver marcado para pular
+      // Isso evita recarregar dados após limpeza intencional
+      if (habits.length === 0 && !skipAutoLoad) {
+        console.log("🔄 Carregando dados mock...");
+        loadMockData();
+      } else if (habits.length > 0) {
+        console.log(`✅ ${habits.length} hábitos já carregados`);
       } else {
-        console.log(`✅ ${habits.length} hábitos já carregados`)
+        console.log("⏭️ Pulando carregamento automático (dados foram limpos)");
       }
-    }, 0)
+    }, 0);
 
-    return () => clearTimeout(timer)
-  }, [habits.length, loadMockData])
+    return () => clearTimeout(timer);
+  }, [habits.length, loadMockData, skipAutoLoad]);
 
   return {
     isLoaded: habits.length > 0,
     habitsCount: habits.length,
-  }
+  };
 }
 
 /**
@@ -40,81 +43,97 @@ export function useHabitStatistics() {
     getInsights,
     getTotalStreak,
     getCompletionRateToday,
-  } = useHabitsStore()
+  } = useHabitsStore();
 
   // Memoiza cálculos pesados para evitar recálculos desnecessários
   // Usa habits e progress como dependências pois as funções do store são estáveis
-  const allStats = useMemo(() => getAllHabitsStats(), [habits, progress, getAllHabitsStats])
-  const insights = useMemo(() => getInsights(), [habits, progress, getInsights])
-  const totalStreak = useMemo(() => getTotalStreak(), [habits, progress, getTotalStreak])
-  const completionRateToday = useMemo(() => getCompletionRateToday(), [habits, progress, getCompletionRateToday])
+  const allStats = useMemo(
+    () => getAllHabitsStats(),
+    [habits, progress, getAllHabitsStats]
+  );
+  const insights = useMemo(
+    () => getInsights(),
+    [habits, progress, getInsights]
+  );
+  const totalStreak = useMemo(
+    () => getTotalStreak(),
+    [habits, progress, getTotalStreak]
+  );
+  const completionRateToday = useMemo(
+    () => getCompletionRateToday(),
+    [habits, progress, getCompletionRateToday]
+  );
 
   // Estatísticas por categoria - memoizado
   const statsByCategory = useMemo(() => {
     return habits.reduce((acc, habit) => {
-      const category = habit.category
+      const category = habit.category;
       if (!acc[category]) {
         acc[category] = {
           count: 0,
           completed: 0,
           total: 0,
-        }
+        };
       }
-      acc[category].count++
+      acc[category].count++;
 
-      const habitProgress = progress.filter((p) => p.habitId === habit.id && p.completed)
-      acc[category].completed += habitProgress.length
-      acc[category].total += progress.filter((p) => p.habitId === habit.id).length
+      const habitProgress = progress.filter(
+        (p) => p.habitId === habit.id && p.completed
+      );
+      acc[category].completed += habitProgress.length;
+      acc[category].total += progress.filter(
+        (p) => p.habitId === habit.id
+      ).length;
 
-      return acc
-    }, {} as Record<string, { count: number; completed: number; total: number }>)
-  }, [habits, progress])
+      return acc;
+    }, {} as Record<string, { count: number; completed: number; total: number }>);
+  }, [habits, progress]);
 
   // Estatísticas da semana atual - memoizado
   const { thisWeekCompletions, thisWeekTotal } = useMemo(() => {
-    const today = new Date()
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay())
-    
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+
     const weekProgress = progress.filter((p) => {
-      const date = new Date(p.date)
-      return date >= startOfWeek && date <= today
-    })
+      const date = new Date(p.date);
+      return date >= startOfWeek && date <= today;
+    });
 
     return {
       thisWeekCompletions: weekProgress.filter((p) => p.completed).length,
       thisWeekTotal: weekProgress.length,
-    }
-  }, [progress])
+    };
+  }, [progress]);
 
   // Estatísticas do mês atual - memoizado
   const { thisMonthCompletions, thisMonthTotal } = useMemo(() => {
-    const today = new Date()
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const monthProgress = progress.filter((p) => {
-      const date = new Date(p.date)
-      return date >= startOfMonth && date <= today
-    })
+      const date = new Date(p.date);
+      return date >= startOfMonth && date <= today;
+    });
 
     return {
       thisMonthCompletions: monthProgress.filter((p) => p.completed).length,
       thisMonthTotal: monthProgress.length,
-    }
-  }, [progress])
+    };
+  }, [progress]);
 
   // Hábito mais consistente (maior streak) - memoizado
   const mostConsistent = useMemo(() => {
     return allStats.reduce((best, stat) => {
-      return stat.currentStreak > (best?.currentStreak || 0) ? stat : best
-    }, allStats[0])
-  }, [allStats])
+      return stat.currentStreak > (best?.currentStreak || 0) ? stat : best;
+    }, allStats[0]);
+  }, [allStats]);
 
   // Hábito com melhor taxa de conclusão - memoizado
   const bestCompletion = useMemo(() => {
     return allStats.reduce((best, stat) => {
-      return stat.completionRate > (best?.completionRate || 0) ? stat : best
-    }, allStats[0])
-  }, [allStats])
+      return stat.completionRate > (best?.completionRate || 0) ? stat : best;
+    }, allStats[0]);
+  }, [allStats]);
 
   return {
     totalHabits: habits.length,
@@ -129,68 +148,69 @@ export function useHabitStatistics() {
     mostConsistent,
     bestCompletion,
     allStats,
-  }
+  };
 }
 
 /**
  * Hook para obter dados de progresso por período
  */
 export function useProgressData(habitId?: string) {
-  const { progress, habits } = useHabitsStore()
+  const { progress, habits } = useHabitsStore();
 
   // Memoiza habitProgress para evitar recálculos
   const habitProgress = useMemo(() => {
-    return habitId
-      ? progress.filter((p) => p.habitId === habitId)
-      : progress
-  }, [progress, habitId])
+    return habitId ? progress.filter((p) => p.habitId === habitId) : progress;
+  }, [progress, habitId]);
 
   // Agrupa progresso por data - memoizado
   const progressByDate = useMemo(() => {
     return habitProgress.reduce((acc, p) => {
       if (!acc[p.date]) {
-        acc[p.date] = []
+        acc[p.date] = [];
       }
-      acc[p.date].push(p)
-      return acc
-    }, {} as Record<string, typeof progress>)
-  }, [habitProgress])
+      acc[p.date].push(p);
+      return acc;
+    }, {} as Record<string, typeof progress>);
+  }, [habitProgress]);
 
   // Calcula progresso dos últimos 7 dias - memoizado
   const last7DaysProgress = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date()
-      date.setDate(date.getDate() - i)
-      return date.toISOString().split('T')[0]
-    }).reverse()
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split("T")[0];
+    }).reverse();
 
     return last7Days.map((date) => ({
       date,
       completed: (progressByDate[date] || []).filter((p) => p.completed).length,
       total: (progressByDate[date] || []).length,
-    }))
-  }, [progressByDate])
+    }));
+  }, [progressByDate]);
 
   // Calcula progresso dos últimos 30 dias - memoizado
   const last30DaysProgress = useMemo(() => {
     const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date()
-      date.setDate(date.getDate() - i)
-      return date.toISOString().split('T')[0]
-    }).reverse()
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split("T")[0];
+    }).reverse();
 
     return last30Days.map((date) => ({
       date,
       completed: (progressByDate[date] || []).filter((p) => p.completed).length,
       total: (progressByDate[date] || []).length,
-    }))
-  }, [progressByDate])
+    }));
+  }, [progressByDate]);
 
   // Memoiza totais
-  const { totalProgress, completedProgress } = useMemo(() => ({
-    totalProgress: habitProgress.length,
-    completedProgress: habitProgress.filter((p) => p.completed).length,
-  }), [habitProgress])
+  const { totalProgress, completedProgress } = useMemo(
+    () => ({
+      totalProgress: habitProgress.length,
+      completedProgress: habitProgress.filter((p) => p.completed).length,
+    }),
+    [habitProgress]
+  );
 
   return {
     progressByDate,
@@ -198,6 +218,5 @@ export function useProgressData(habitId?: string) {
     last30DaysProgress,
     totalProgress,
     completedProgress,
-  }
+  };
 }
-
