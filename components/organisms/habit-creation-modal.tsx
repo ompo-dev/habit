@@ -70,18 +70,18 @@ const POPULAR_ICONS = [
 
 // Paleta de cores
 const COLORS = [
-  { name: "Azul", primary: "#60a5fa", background: "#1e3a8a" },
-  { name: "Roxo", primary: "#a78bfa", background: "#4c1d95" },
-  { name: "Rosa", primary: "#f472b6", background: "#831843" },
-  { name: "Vermelho", primary: "#ef4444", background: "#7f1d1d" },
-  { name: "Laranja", primary: "#fb923c", background: "#7c2d12" },
-  { name: "Amarelo", primary: "#fbbf24", background: "#78350f" },
-  { name: "Verde", primary: "#10b981", background: "#064e3b" },
-  { name: "Verde Limão", primary: "#84cc16", background: "#365314" },
-  { name: "Ciano", primary: "#06b6d4", background: "#164e63" },
-  { name: "Índigo", primary: "#818cf8", background: "#312e81" },
-  { name: "Violeta", primary: "#8b5cf6", background: "#4c1d95" },
-  { name: "Fúcsia", primary: "#ec4899", background: "#831843" },
+  { name: "Azul", value: "#60a5fa", background: "#1e3a8a" },
+  { name: "Roxo", value: "#a78bfa", background: "#4c1d95" },
+  { name: "Rosa", value: "#f472b6", background: "#831843" },
+  { name: "Vermelho", value: "#ef4444", background: "#7f1d1d" },
+  { name: "Laranja", value: "#fb923c", background: "#7c2d12" },
+  { name: "Amarelo", value: "#fbbf24", background: "#78350f" },
+  { name: "Verde", value: "#10b981", background: "#064e3b" },
+  { name: "Verde Limão", value: "#84cc16", background: "#365314" },
+  { name: "Ciano", value: "#06b6d4", background: "#164e63" },
+  { name: "Índigo", value: "#818cf8", background: "#312e81" },
+  { name: "Violeta", value: "#8b5cf6", background: "#4c1d95" },
+  { name: "Fúcsia", value: "#ec4899", background: "#831843" },
 ];
 
 const CATEGORIES = [
@@ -183,6 +183,47 @@ export function HabitCreationModal() {
     }
   );
 
+  // Monitora o scroll para saber se está no topo
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isOpen) return;
+
+    const handleScroll = () => {
+      setIsAtTop(container.scrollTop === 0);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [isOpen]);
+
+  // Handler para drag - fecha o modal quando arrastar para baixo
+  // useCallback garante que a função seja estável
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      // Só fecha se estiver no topo E arrastou para baixo mais de 100px ou com velocidade alta
+      if (isAtTop && (info.offset.y > 100 || info.velocity.y > 500)) {
+        handleCloseWithCleanup();
+      }
+    },
+    [handleCloseWithCleanup, isAtTop]
+  );
+
+  const handleDragStart = useCallback(() => {
+    // Só permite drag se estiver no topo
+    if (!isAtTop && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isAtTop]);
+
+  const handleDrag = useCallback(() => {
+    // Restaura scroll durante o drag se não estiver no topo
+    if (!isAtTop && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [isAtTop]);
+
   if (!isOpen) return null;
 
   const handleSave = () => {
@@ -209,45 +250,6 @@ export function HabitCreationModal() {
     addHabit(newHabit);
     handleCloseWithCleanup();
   };
-
-  // Monitora o scroll para saber se está no topo
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      setIsAtTop(container.scrollTop === 0);
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [isOpen]);
-
-  // Handler para drag - fecha o modal quando arrastar para baixo
-  // useCallback garante que a função seja estável
-  const handleDragEnd = useCallback(
-    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      // Só fecha se estiver no topo E arrastou para baixo mais de 100px ou com velocidade alta
-      if (isAtTop && (info.offset.y > 100 || info.velocity.y > 500)) {
-        handleCloseWithCleanup();
-      }
-    },
-    [handleCloseWithCleanup, isAtTop]
-  );
-
-  const handleDragStart = useCallback(() => {
-    // Só permite drag se estiver no topo
-    if (!isAtTop && scrollContainerRef.current) {
-      scrollContainerRef.current.style.overflow = "hidden";
-    }
-  }, [isAtTop]);
-
-  const handleDrag = useCallback(() => {
-    // Restaura scroll durante o drag se não estiver no topo
-    if (!isAtTop && scrollContainerRef.current) {
-      scrollContainerRef.current.style.overflow = "auto";
-    }
-  }, [isAtTop]);
 
   return (
     <AnimatePresence>
@@ -319,316 +321,324 @@ export function HabitCreationModal() {
                 )}
               >
                 <Check className="h-5 w-5 mr-2" />
-                {sessionStorage.getItem("selectedHabitTemplate") ? "Add" : "Criar"}
+                {sessionStorage.getItem("selectedHabitTemplate")
+                  ? "Add"
+                  : "Criar"}
               </motion.button>
             </motion.div>
 
-        {/* Preview */}
-        <PreviewCard
-          icon={selectedIcon}
-          title={title}
-          subtitle={CATEGORIES.find((c) => c.value === category)?.label}
-          color={selectedColor}
-        />
+            {/* Preview */}
+            <PreviewCard
+              icon={selectedIcon}
+              title={title}
+              subtitle={CATEGORIES.find((c) => c.value === category)?.label}
+              color={selectedColor}
+            />
 
-        {/* Nome */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-2">
-            Nome do Hábito *
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-xl"
-            placeholder="Ex: Beber água, Ler livro..."
-          />
-        </div>
-
-        {/* Descrição */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-2">
-            Descrição
-          </label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-xl"
-            placeholder="Ex: 8 copos por dia..."
-          />
-        </div>
-
-        {/* Grupo */}
-        {groups.length > 0 && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-white mb-3">
-              Grupo (opcional)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <button
-                onClick={() => setSelectedGroupId(null)}
-                className={cn(
-                  "p-3 rounded-xl text-sm font-medium transition-all backdrop-blur-xl border",
-                  !selectedGroupId
-                    ? "bg-primary/20 border-primary/40 text-primary shadow-lg"
-                    : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
-                )}
-              >
-                Sem grupo
-              </button>
-              {groups.map((group) => {
-                const isSelected = selectedGroupId === group.id;
-                const GroupIcon =
-                  ((LucideIcons as any)[group.icon] as LucideIcon) ||
-                  LucideIcons.FolderPlus;
-
-                return (
-                  <button
-                    key={group.id}
-                    onClick={() => setSelectedGroupId(group.id)}
-                    className={cn(
-                      "p-3 rounded-xl text-sm font-medium transition-all backdrop-blur-xl border flex items-center gap-2",
-                      isSelected
-                        ? "ring-2 ring-white/50 border-white/30 shadow-lg"
-                        : "border-white/10 hover:bg-white/10"
-                    )}
-                    style={{
-                      backgroundColor: isSelected
-                        ? group.color + "30"
-                        : "rgba(255,255,255,0.05)",
-                      color: isSelected ? group.color : "rgba(255,255,255,0.6)",
-                    }}
-                  >
-                    <GroupIcon className="h-4 w-4" />
-                    <span className="truncate">{group.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Categoria */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-3">
-            Categoria *
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {CATEGORIES.map((cat) => {
-              const isSelected = category === cat.value;
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() => setCategory(cat.value)}
-                  className={cn(
-                    "p-3 rounded-xl text-sm font-medium transition-all backdrop-blur-xl border",
-                    isSelected
-                      ? "bg-primary/20 border-primary/40 text-primary shadow-lg"
-                      : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
-                  )}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Tipo de Hábito */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-3">
-            Tipo *
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {HABIT_TYPES.map((type) => {
-              const isSelected = habitType === type.value;
-              return (
-                <button
-                  key={type.value}
-                  onClick={() => setHabitType(type.value)}
-                  className={cn(
-                    "p-4 rounded-xl text-left transition-all backdrop-blur-xl border",
-                    isSelected
-                      ? "bg-primary/20 border-primary/40 shadow-lg"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
-                  )}
-                >
-                  <div className="font-semibold text-white mb-1">
-                    {type.label}
-                  </div>
-                  <div className="text-xs text-white/60">
-                    {type.description}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Configurações específicas do tipo */}
-        <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl">
-          {habitType === "counter" && (
-            <div>
+            {/* Nome */}
+            <div className="mb-6">
               <label className="block text-sm font-medium text-white mb-2">
-                Meta Diária
+                Nome do Hábito *
               </label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setTargetCount(Math.max(1, targetCount - 1))}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
-                >
-                  <Minus className="h-5 w-5 text-white" />
-                </button>
-                <div className="flex-1 text-center">
-                  <div className="text-3xl font-bold text-white">
-                    {targetCount}
-                  </div>
-                  <div className="text-xs text-white/60">
-                    {targetCount === 1 ? "vez por dia" : "vezes por dia"}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setTargetCount(targetCount + 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
-                >
-                  <Plus className="h-5 w-5 text-white" />
-                </button>
-              </div>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-xl"
+                placeholder="Ex: Beber água, Ler livro..."
+              />
             </div>
-          )}
 
-          {habitType === "timer" && (
-            <div>
+            {/* Descrição */}
+            <div className="mb-6">
               <label className="block text-sm font-medium text-white mb-2">
-                Meta de Tempo
+                Descrição
               </label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() =>
-                    setTargetMinutes(Math.max(5, targetMinutes - 5))
-                  }
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
-                >
-                  <Minus className="h-5 w-5 text-white" />
-                </button>
-                <div className="flex-1 text-center">
-                  <div className="text-3xl font-bold text-white">
-                    {targetMinutes}
-                  </div>
-                  <div className="text-xs text-white/60">minutos</div>
-                </div>
-                <button
-                  onClick={() => setTargetMinutes(targetMinutes + 5)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
-                >
-                  <Plus className="h-5 w-5 text-white" />
-                </button>
-              </div>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-xl"
+                placeholder="Ex: 8 copos por dia..."
+              />
             </div>
-          )}
 
-          {habitType === "pomodoro" && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">
-                  Sessões por Dia
+            {/* Grupo */}
+            {groups.length > 0 && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white mb-3">
+                  Grupo (opcional)
                 </label>
-                <div className="flex items-center gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
-                    onClick={() => setTargetCount(Math.max(1, targetCount - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                    onClick={() => setSelectedGroupId(null)}
+                    className={cn(
+                      "p-3 rounded-xl text-sm font-medium transition-all backdrop-blur-xl border",
+                      !selectedGroupId
+                        ? "bg-primary/20 border-primary/40 text-primary shadow-lg"
+                        : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                    )}
                   >
-                    <Minus className="h-5 w-5 text-white" />
+                    Sem grupo
                   </button>
-                  <div className="flex-1 text-center">
-                    <div className="text-3xl font-bold text-white">
-                      {targetCount}
-                    </div>
-                    <div className="text-xs text-white/60">
-                      {targetCount === 1 ? "sessão" : "sessões"}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setTargetCount(targetCount + 1)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
-                  >
-                    <Plus className="h-5 w-5 text-white" />
-                  </button>
+                  {groups.map((group) => {
+                    const isSelected = selectedGroupId === group.id;
+                    const GroupIcon =
+                      ((LucideIcons as any)[group.icon] as LucideIcon) ||
+                      LucideIcons.FolderPlus;
+
+                    return (
+                      <button
+                        key={group.id}
+                        onClick={() => setSelectedGroupId(group.id)}
+                        className={cn(
+                          "p-3 rounded-xl text-sm font-medium transition-all backdrop-blur-xl border flex items-center gap-2",
+                          isSelected
+                            ? "ring-2 ring-white/50 border-white/30 shadow-lg"
+                            : "border-white/10 hover:bg-white/10"
+                        )}
+                        style={{
+                          backgroundColor: isSelected
+                            ? group.color + "30"
+                            : "rgba(255,255,255,0.05)",
+                          color: isSelected
+                            ? group.color
+                            : "rgba(255,255,255,0.6)",
+                        }}
+                      >
+                        <GroupIcon className="h-4 w-4" />
+                        <span className="truncate">{group.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-white/60 mb-2">
-                    Tempo de Trabalho
-                  </label>
-                  <input
-                    type="number"
-                    value={pomodoroWork}
-                    onChange={(e) =>
-                      setPomodoroWork(
-                        Math.max(1, parseInt(e.target.value) || 25)
-                      )
-                    }
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/30"
-                  />
-                  <p className="text-xs text-white/40 mt-1 text-center">
-                    minutos
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs text-white/60 mb-2">
-                    Tempo de Pausa
-                  </label>
-                  <input
-                    type="number"
-                    value={pomodoroBreak}
-                    onChange={(e) =>
-                      setPomodoroBreak(
-                        Math.max(1, parseInt(e.target.value) || 5)
-                      )
-                    }
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/30"
-                  />
-                  <p className="text-xs text-white/40 mt-1 text-center">
-                    minutos
-                  </p>
-                </div>
+            {/* Categoria */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-white mb-3">
+                Categoria *
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {CATEGORIES.map((cat) => {
+                  const isSelected = category === cat.value;
+                  return (
+                    <button
+                      key={cat.value}
+                      onClick={() => setCategory(cat.value)}
+                      className={cn(
+                        "p-3 rounded-xl text-sm font-medium transition-all backdrop-blur-xl border",
+                        isSelected
+                          ? "bg-primary/20 border-primary/40 text-primary shadow-lg"
+                          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Ícones */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-3">
-            Ícone *
-          </label>
-          <IconPicker
-            icons={POPULAR_ICONS}
-            selectedIcon={selectedIcon}
-            onSelect={setSelectedIcon}
-          />
-        </div>
+            {/* Tipo de Hábito */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-white mb-3">
+                Tipo *
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {HABIT_TYPES.map((type) => {
+                  const isSelected = habitType === type.value;
+                  return (
+                    <button
+                      key={type.value}
+                      onClick={() => setHabitType(type.value)}
+                      className={cn(
+                        "p-4 rounded-xl text-left transition-all backdrop-blur-xl border",
+                        isSelected
+                          ? "bg-primary/20 border-primary/40 shadow-lg"
+                          : "bg-white/5 border-white/10 hover:bg-white/10"
+                      )}
+                    >
+                      <div className="font-semibold text-white mb-1">
+                        {type.label}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        {type.description}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Cores */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-3">
-            Cor *
-          </label>
-          <ColorPicker
-            colors={COLORS}
-            selectedColor={selectedColor}
-            onSelect={(color) =>
-              setSelectedColor(
-                typeof color === "string"
-                  ? { primary: color, background: color + "30" }
-                  : color
-              )
-            }
-          />
-        </div>
+            {/* Configurações específicas do tipo */}
+            <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl">
+              {habitType === "counter" && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Meta Diária
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() =>
+                        setTargetCount(Math.max(1, targetCount - 1))
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                    >
+                      <Minus className="h-5 w-5 text-white" />
+                    </button>
+                    <div className="flex-1 text-center">
+                      <div className="text-3xl font-bold text-white">
+                        {targetCount}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        {targetCount === 1 ? "vez por dia" : "vezes por dia"}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setTargetCount(targetCount + 1)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                    >
+                      <Plus className="h-5 w-5 text-white" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {habitType === "timer" && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Meta de Tempo
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() =>
+                        setTargetMinutes(Math.max(5, targetMinutes - 5))
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                    >
+                      <Minus className="h-5 w-5 text-white" />
+                    </button>
+                    <div className="flex-1 text-center">
+                      <div className="text-3xl font-bold text-white">
+                        {targetMinutes}
+                      </div>
+                      <div className="text-xs text-white/60">minutos</div>
+                    </div>
+                    <button
+                      onClick={() => setTargetMinutes(targetMinutes + 5)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                    >
+                      <Plus className="h-5 w-5 text-white" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {habitType === "pomodoro" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Sessões por Dia
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() =>
+                          setTargetCount(Math.max(1, targetCount - 1))
+                        }
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                      >
+                        <Minus className="h-5 w-5 text-white" />
+                      </button>
+                      <div className="flex-1 text-center">
+                        <div className="text-3xl font-bold text-white">
+                          {targetCount}
+                        </div>
+                        <div className="text-xs text-white/60">
+                          {targetCount === 1 ? "sessão" : "sessões"}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setTargetCount(targetCount + 1)}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-xl border border-white/10"
+                      >
+                        <Plus className="h-5 w-5 text-white" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-white/60 mb-2">
+                        Tempo de Trabalho
+                      </label>
+                      <input
+                        type="number"
+                        value={pomodoroWork}
+                        onChange={(e) =>
+                          setPomodoroWork(
+                            Math.max(1, parseInt(e.target.value) || 25)
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/30"
+                      />
+                      <p className="text-xs text-white/40 mt-1 text-center">
+                        minutos
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-white/60 mb-2">
+                        Tempo de Pausa
+                      </label>
+                      <input
+                        type="number"
+                        value={pomodoroBreak}
+                        onChange={(e) =>
+                          setPomodoroBreak(
+                            Math.max(1, parseInt(e.target.value) || 5)
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/30"
+                      />
+                      <p className="text-xs text-white/40 mt-1 text-center">
+                        minutos
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Ícones */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-white mb-3">
+                Ícone *
+              </label>
+              <IconPicker
+                icons={POPULAR_ICONS}
+                selectedIcon={selectedIcon}
+                onSelect={setSelectedIcon}
+              />
+            </div>
+
+            {/* Cores */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-white mb-3">
+                Cor *
+              </label>
+              <ColorPicker
+                colors={COLORS}
+                selectedColor={selectedColor}
+                onSelect={(color) =>
+                  setSelectedColor(
+                    typeof color === "string"
+                      ? { primary: color, background: color + "30" }
+                      : color
+                  )
+                }
+              />
+            </div>
 
             {/* Espaçamento final */}
             <div className="h-4"></div>
