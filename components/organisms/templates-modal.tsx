@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { X, Search, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -51,14 +51,16 @@ export function TemplatesModal() {
     };
   }, [isTemplatesModalOpen, isAdding]);
 
-  const filteredTemplates = HABIT_TEMPLATES.filter((template) => {
-    const matchesCategory =
-      selectedCategory === "todos" || template.category === selectedCategory;
-    const matchesSearch = template.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredTemplates = useMemo(() => {
+    return HABIT_TEMPLATES.filter((template) => {
+      const matchesCategory =
+        selectedCategory === "todos" || template.category === selectedCategory;
+      const matchesSearch = template.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [selectedCategory, searchQuery]);
 
   const handleSelectTemplate = useCallback(
     (template: (typeof HABIT_TEMPLATES)[0]) => {

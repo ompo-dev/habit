@@ -3,8 +3,12 @@ import { ArrowLeft, Download, Upload, Trash2, Database } from "lucide-react";
 import Link from "next/link";
 import { CACHE_VERSION } from "@/lib/constants/version";
 import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
+import { ClientProviders } from "@/app/client-providers";
 
-export default function ConfiguracoesPage() {
+// Força renderização dinâmica para evitar pré-renderização durante o build
+export const dynamic = "force-dynamic";
+
+function ConfiguracoesContent() {
   const {
     handleLoadMockData,
     handleClearData,
@@ -16,7 +20,9 @@ export default function ConfiguracoesPage() {
   return (
     <div
       className="bg-background"
-      style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))" }}
+      style={{
+        paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))",
+      }}
     >
       <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
@@ -109,5 +115,13 @@ export default function ConfiguracoesPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ConfiguracoesPage() {
+  return (
+    <ClientProviders>
+      <ConfiguracoesContent />
+    </ClientProviders>
   );
 }
