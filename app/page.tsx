@@ -60,7 +60,10 @@ export default function HomePage() {
 
   return (
     <ClientProviders>
-      <div className="min-h-screen bg-background pb-24">
+      <div
+        className="bg-background"
+        style={{ height: "100vh", overflow: "hidden" }}
+      >
         <Swapper>
           <HabitsTab />
           <StatisticsTab />
@@ -137,7 +140,7 @@ function HabitsTab() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-6 py-6">
+      <main className="mx-auto max-w-lg px-6 py-6 pb-24">
         <div>
           <HabitList />
         </div>
@@ -175,6 +178,7 @@ function StatisticsTab() {
     () => thisMonthCompletions,
     0
   );
+  const hydratedInsights = useHydratedValue(() => insights, []);
 
   return (
     <>
@@ -192,7 +196,7 @@ function StatisticsTab() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-6 py-6">
+      <main className="mx-auto max-w-lg px-6 py-6 pb-24">
         {/* Calendário */}
         <div className="mb-6">
           {calendarView === "week" && <WeeklyCalendar />}
@@ -260,11 +264,11 @@ function StatisticsTab() {
         </div>
 
         {/* Insights */}
-        {insights.length > 0 && (
+        {hydratedInsights.length > 0 && (
           <div className="mb-6">
             <h2 className="mb-3 text-lg font-bold text-white">Insights</h2>
             <div className="space-y-3">
-              {insights.map((insight, index) => (
+              {hydratedInsights.map((insight, index) => (
                 <InsightCard key={index} text={insight} />
               ))}
             </div>
@@ -302,7 +306,7 @@ function SettingsTab() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-6 py-6">
+      <main className="mx-auto max-w-lg px-6 py-6 pb-24">
         <div className="flex flex-col gap-4">
           <SettingsSection title="Aparência">
             <div className="flex items-center justify-between">

@@ -35,6 +35,14 @@ export function Swapper({ children, className }: SwapperProps) {
     // Reseta o offset do drag
     x.set(0);
     
+    // Reseta o scroll da tela atual para o topo quando trocar de tela
+    const currentTabElement = containerRef.current?.querySelector(
+      `[data-tab-index="${currentIndex}"]`
+    ) as HTMLElement;
+    if (currentTabElement) {
+      currentTabElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
     return () => controls.stop();
   }, [activeTab, currentIndex, baseX, x]);
 
@@ -81,10 +89,12 @@ export function Swapper({ children, className }: SwapperProps) {
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-full ${className || ""}`}
+      className={`relative w-full ${className || ""}`}
       style={{ 
-        overflow: "hidden",
-        position: "relative"
+        overflowX: "hidden",
+        overflowY: "hidden",
+        position: "relative",
+        height: "100vh"
       }}
     >
       {/* Renderiza todas as telas lado a lado */}
@@ -104,17 +114,27 @@ export function Swapper({ children, className }: SwapperProps) {
         dragMomentum={false}
         dragDirectionLock={true}
         onDragEnd={handleDragEnd}
-        className="flex w-full h-full"
         style={{ 
           x: translateX,
-          willChange: "transform"
+          willChange: "transform",
+          display: "flex",
+          width: "100%",
+          height: "100%"
         }}
       >
         {children.map((child, index) => (
           <div
             key={TABS_ORDER[index]}
-            className="w-full h-full flex-shrink-0"
-            style={{ minWidth: "100%", width: "100%" }}
+            data-tab-index={index}
+            style={{ 
+              minWidth: "100%", 
+              width: "100%",
+              flexShrink: 0,
+              height: "100%",
+              overflowY: "auto",
+              overflowX: "hidden",
+              WebkitOverflowScrolling: "touch"
+            }}
           >
             {child}
           </div>

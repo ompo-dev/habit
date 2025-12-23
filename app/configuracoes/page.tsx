@@ -25,7 +25,7 @@ export default function ConfiguracoesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="bg-background pb-24">
       <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
           <Link
