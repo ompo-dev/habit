@@ -102,17 +102,10 @@ export function HabitList() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-      },
     },
     exit: {
       opacity: 0,
       scale: 0.9,
-      transition: {
-        duration: 0.2,
-      },
     },
   };
 
@@ -131,6 +124,7 @@ export function HabitList() {
           <motion.div
             key={group.id}
             variants={itemVariants}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             className="flex flex-col gap-3"
           >
             <GroupHeader
@@ -145,7 +139,7 @@ export function HabitList() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                   className="flex flex-col gap-3 px-2.5 overflow-hidden"
                 >
                   {groupHabits.length > 0 ? (
@@ -161,7 +155,9 @@ export function HabitList() {
                           <HabitCard
                             habit={habit}
                             onClick={() => openHabit(habit.id)}
-                            onComplete={() => markComplete(habit.id, selectedDate)}
+                            onComplete={() =>
+                              markComplete(habit.id, selectedDate)
+                            }
                             onUndo={() => undoComplete(habit.id, selectedDate)}
                           />
                         </motion.div>
@@ -187,75 +183,79 @@ export function HabitList() {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDeleteGroup(group.id, group.name)}
+                          onClick={() =>
+                            handleDeleteGroup(group.id, group.name)
+                          }
                           className="flex items-center justify-center gap-2 rounded-2xl p-4 transition-all backdrop-blur-xl border border-dashed border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10 text-red-500/60 hover:text-red-500"
                           title={`Excluir grupo "${group.name}"`}
                         >
                           <Trash2 className="h-5 w-5" />
                         </motion.button>
                       </motion.div>
-                  </>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-8"
-                      >
-                        <p className="text-white/40 text-sm mb-4">
-                          Nenhum hábito neste grupo ainda.
-                        </p>
-                        <div className="flex items-center gap-2 justify-center">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleAddToGroup(group.id)}
-                            className="inline-flex items-center gap-2 rounded-full px-6 py-3 transition-all bg-primary/20 hover:bg-primary/30 border-2 border-primary/40 text-white font-medium"
-                          >
-                            <Plus className="h-5 w-5" />
-                            Adicionar primeiro hábito
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDeleteGroup(group.id, group.name)}
-                            className="flex items-center justify-center rounded-full p-3 transition-all bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/40 text-red-500 hover:text-red-400"
-                            title={`Excluir grupo "${group.name}"`}
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
-
-        {ungroupedHabits.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col gap-3"
-          >
-            {ungroupedHabits.map((habit, index) => (
-              <motion.div
-                key={habit.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05, duration: 0.2 }}
-              >
-                <HabitCard
-                  habit={habit}
-                  onClick={() => openHabit(habit.id)}
-                  onComplete={() => markComplete(habit.id, selectedDate)}
-                  onUndo={() => undoComplete(habit.id, selectedDate)}
-                />
-              </motion.div>
-            ))}
+                    </>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-8"
+                    >
+                      <p className="text-white/40 text-sm mb-4">
+                        Nenhum hábito neste grupo ainda.
+                      </p>
+                      <div className="flex items-center gap-2 justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleAddToGroup(group.id)}
+                          className="inline-flex items-center gap-2 rounded-full px-6 py-3 transition-all bg-primary/20 hover:bg-primary/30 border-2 border-primary/40 text-white font-medium"
+                        >
+                          <Plus className="h-5 w-5" />
+                          Adicionar primeiro hábito
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() =>
+                            handleDeleteGroup(group.id, group.name)
+                          }
+                          className="flex items-center justify-center rounded-full p-3 transition-all bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/40 text-red-500 hover:text-red-400"
+                          title={`Excluir grupo "${group.name}"`}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
-        )}
-      </motion.div>
-    );
-  }
+        );
+      })}
+
+      {ungroupedHabits.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col gap-3"
+        >
+          {ungroupedHabits.map((habit, index) => (
+            <motion.div
+              key={habit.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05, duration: 0.2 }}
+            >
+              <HabitCard
+                habit={habit}
+                onClick={() => openHabit(habit.id)}
+                onComplete={() => markComplete(habit.id, selectedDate)}
+                onUndo={() => undoComplete(habit.id, selectedDate)}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}

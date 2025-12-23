@@ -1,33 +1,43 @@
-"use client"
+"use client";
 
-import { BottomNavigation } from "@/components/organisms/bottom-navigation"
-import { ArrowLeft, Flame, Target, TrendingUp, Calendar, Award, BarChart3 } from "lucide-react"
-import Link from "next/link"
-import { useHabitsStore } from "@/lib/stores/habits-store"
-import { StatCard } from "@/components/molecules/stat-card"
-import { InsightCard } from "@/components/molecules/insight-card"
-import { HabitStatsList } from "@/components/organisms/habit-stats-list"
-import { ProgressChart } from "@/components/molecules/progress-chart"
-import { CategoryStats } from "@/components/molecules/category-stats"
-import { useHabitData, useHabitStatistics, useProgressData } from "@/lib/hooks/use-habit-data"
-import type { HabitCategory } from "@/lib/types/habit"
+import { BottomNavigation } from "@/components/organisms/bottom-navigation";
+import {
+  ArrowLeft,
+  Flame,
+  Target,
+  TrendingUp,
+  Calendar,
+  Award,
+  BarChart3,
+} from "lucide-react";
+import Link from "next/link";
+import { useHabitsStore } from "@/lib/stores/habits-store";
+import { StatCard } from "@/components/molecules/stat-card";
+import { HabitStatsList } from "@/components/organisms/habit-stats-list";
+import { ProgressChart } from "@/components/molecules/progress-chart";
+import { CategoryStats } from "@/components/molecules/category-stats";
+import {
+  useHabitData,
+  useHabitStatistics,
+  useProgressData,
+} from "@/lib/hooks/use-habit-data";
+import type { HabitCategory } from "@/lib/types/habit";
 
 export default function EstatisticasPage() {
-  useHabitData() // Carrega dados mock
-  const statistics = useHabitStatistics()
-  const { last7DaysProgress } = useProgressData()
-  const { habits } = useHabitsStore()
+  useHabitData(); // Carrega dados mock
+  const statistics = useHabitStatistics();
+  const { last7DaysProgress } = useProgressData();
+  const { habits } = useHabitsStore();
 
   const {
     totalStreak,
     completionRateToday,
-    insights,
     statsByCategory,
     thisWeekCompletions,
     thisMonthCompletions,
     mostConsistent,
     bestCompletion,
-  } = statistics
+  } = statistics;
 
   return (
     <div className="bg-background pb-24">
@@ -81,7 +91,9 @@ export default function EstatisticasPage() {
                 <div className="rounded-2xl bg-linear-to-r from-orange-500/20 to-red-500/20 p-4 border border-orange-500/30 backdrop-blur-xl shadow-lg">
                   <div className="flex items-center gap-3 mb-2">
                     <Award className="h-5 w-5 text-orange-400" />
-                    <h3 className="font-semibold text-white">Mais Consistente</h3>
+                    <h3 className="font-semibold text-white">
+                      Mais Consistente
+                    </h3>
                   </div>
                   <p className="text-white/80">
                     {habits.find((h) => h.id === mostConsistent.habitId)?.title}
@@ -95,7 +107,9 @@ export default function EstatisticasPage() {
                 <div className="rounded-2xl bg-linear-to-r from-emerald-500/20 to-cyan-500/20 p-4 border border-emerald-500/30 backdrop-blur-xl shadow-lg">
                   <div className="flex items-center gap-3 mb-2">
                     <TrendingUp className="h-5 w-5 text-emerald-400" />
-                    <h3 className="font-semibold text-white">Melhor Performance</h3>
+                    <h3 className="font-semibold text-white">
+                      Melhor Performance
+                    </h3>
                   </div>
                   <p className="text-white/80">
                     {habits.find((h) => h.id === bestCompletion.habitId)?.title}
@@ -133,18 +147,6 @@ export default function EstatisticasPage() {
           </div>
         </div>
 
-        {/* Insights */}
-        {insights.length > 0 && (
-          <div className="mb-6">
-            <h2 className="mb-3 text-lg font-bold text-white">Insights</h2>
-            <div className="space-y-3">
-              {insights.map((insight, index) => (
-                <InsightCard key={index} text={insight} />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Habit Stats */}
         <div>
           <h2 className="mb-3 text-lg font-bold text-white flex items-center gap-2">
@@ -157,5 +159,5 @@ export default function EstatisticasPage() {
 
       <BottomNavigation />
     </div>
-  )
+  );
 }

@@ -24,16 +24,13 @@ import {
 import { ClientProviders } from "./client-providers";
 import { useHabitsStore } from "@/lib/stores/habits-store";
 import { useUIStore } from "@/lib/stores/ui-store";
-import { useDialog } from "@/lib/contexts/dialog-context";
 import {
   useHabitData,
   useHabitStatistics,
   useProgressData,
 } from "@/lib/hooks/use-habit-data";
 import { useHydratedValue } from "@/lib/hooks/use-hydration";
-import { cn } from "@/lib/utils/cn";
 import {
-  useActiveTab,
   useCalendarView,
   useSelectedDay,
   useGroupTemplatesModal,
@@ -44,7 +41,6 @@ import React from "react";
 import { MonthCalendar } from "@/components/molecules/month-calendar";
 import { YearOverview } from "@/components/molecules/year-overview";
 import { StatCard } from "@/components/molecules/stat-card";
-import { InsightCard } from "@/components/molecules/insight-card";
 import { HabitStatsList } from "@/components/organisms/habit-stats-list";
 import { ProgressChart } from "@/components/molecules/progress-chart";
 import { CategoryStats } from "@/components/molecules/category-stats";
@@ -159,7 +155,6 @@ function StatisticsTab() {
   const {
     totalStreak,
     completionRateToday,
-    insights,
     statsByCategory,
     thisWeekCompletions,
     thisMonthCompletions,
@@ -178,7 +173,6 @@ function StatisticsTab() {
     () => thisMonthCompletions,
     0
   );
-  const hydratedInsights = useHydratedValue(() => insights, []);
 
   return (
     <>
@@ -262,18 +256,6 @@ function StatisticsTab() {
             ))}
           </div>
         </div>
-
-        {/* Insights */}
-        {hydratedInsights.length > 0 && (
-          <div className="mb-6">
-            <h2 className="mb-3 text-lg font-bold text-white">Insights</h2>
-            <div className="space-y-3">
-              {hydratedInsights.map((insight, index) => (
-                <InsightCard key={index} text={insight} />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Habit Stats */}
         <div>
