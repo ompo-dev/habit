@@ -37,16 +37,22 @@ export const HabitModal = memo(function HabitModal() {
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Hooks devem ser chamados sempre, antes de qualquer return condicional
   useModalBodyLock(isOpen);
-  const { getSubtitle } = useHabitProgress(habit as HabitWithProgress);
+  // Passa null seguro para o hook quando habit não existe (garante que não seja undefined)
+  const { getSubtitle } = useHabitProgress(habit ?? null);
 
-  if (!isOpen || !habit) return null;
-
-  // Memoiza IconComponent para evitar recálculos
+  // Memoiza IconComponent para evitar recálculos (só quando habit existe)
   const IconComponent = useMemo(
-    () => ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle,
-    [habit.icon]
+    () =>
+      habit
+        ? ((LucideIcons as any)[habit.icon] as LucideIcon) || LucideIcons.Circle
+        : LucideIcons.Circle,
+    [habit?.icon]
   );
+
+  // Return condicional DEPOIS de todos os hooks
+  if (!isOpen || !habit) return null;
 
   const handleClose = () => {
     closeHabit();
@@ -190,10 +196,18 @@ export const HabitModal = memo(function HabitModal() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <h2 id="habit-modal-title" className="text-2xl font-bold text-white">
+                  <h2
+                    id="habit-modal-title"
+                    className="text-2xl font-bold text-white"
+                  >
                     {habit.title}
                   </h2>
-                  <p id="habit-modal-description" className="text-sm text-white/60">{getSubtitle()}</p>
+                  <p
+                    id="habit-modal-description"
+                    className="text-sm text-white/60"
+                  >
+                    {getSubtitle()}
+                  </p>
                 </motion.div>
               </div>
 
@@ -274,7 +288,8 @@ export const HabitModal = memo(function HabitModal() {
                     className="mb-2 backdrop-blur-xl shadow-lg"
                     aria-label={`Sequência de ${habit.streak} dias`}
                   >
-                    <span aria-hidden="true">🔥</span> {habit.streak} dias de sequência
+                    <span aria-hidden="true">🔥</span> {habit.streak} dias de
+                    sequência
                   </Badge>
                 </motion.div>
               )}
