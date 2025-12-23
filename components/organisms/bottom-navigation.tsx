@@ -27,29 +27,31 @@ export function BottomNavigation() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-2xl border-t border-white/10 shadow-[0_-4px_24px_0_rgba(0,0,0,0.3)] safe-bottom">
-      <div className="mx-auto flex max-w-lg items-center justify-center gap-8 px-4 py-2 safe-area-bottom">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.tab;
+      <div className="px-4 flex items-center justify-center">
+        <div className="mx-auto flex max-w-lg items-center justify-center gap-8 px-4 py-2 safe-area-bottom">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.tab;
 
-          return (
-            <button
-              key={item.tab}
-              onClick={() => setActiveTab(item.tab)}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-xl px-6 py-2 transition-all backdrop-blur-xl",
-                isActive
-                  ? "bg-primary/20 text-primary border border-primary/30 shadow-lg"
-                  : "text-white/40 hover:text-white/60 hover:bg-white/5"
-              )}
-              aria-label={item.label}
-              aria-current={isActive ? "page" : undefined}
-              type="button"
-            >
-              <span aria-hidden="true">{item.icon}</span>
-              <span className="text-xs font-medium">{item.label}</span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={item.tab}
+                onClick={() => setActiveTab(item.tab)}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-xl px-6 py-2 transition-all backdrop-blur-xl",
+                  isActive
+                    ? "bg-primary/20 text-primary border border-primary/30 shadow-lg"
+                    : "text-white/40 hover:text-white/60 hover:bg-white/5"
+                )}
+                aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
+                type="button"
+              >
+                <span aria-hidden="true">{item.icon}</span>
+                <span className="text-xs font-medium">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

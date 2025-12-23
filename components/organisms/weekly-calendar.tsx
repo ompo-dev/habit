@@ -88,20 +88,20 @@ export function WeeklyCalendar() {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-center justify-center">
       {/* Botão Semana Anterior */}
       <motion.button
         whileHover={{ scale: 1.1, x: -2 }}
         whileTap={{ scale: 0.9 }}
         onClick={goToPreviousWeek}
-        className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg"
+        className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg mr-2 sm:mr-3"
         aria-label="Semana anterior"
       >
         <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       </motion.button>
 
       {/* Dias da Semana */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center">
+      <div className="flex items-center gap-2 sm:gap-3">
         {weekDays.map((day, index) => {
           const isSelected = isSameDay(day, selectedDay);
           const dayNumber = getDayOfMonth(day);
@@ -210,7 +210,7 @@ export function WeeklyCalendar() {
         whileHover={{ scale: 1.1, x: 2 }}
         whileTap={{ scale: 0.9 }}
         onClick={goToNextWeek}
-        className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg"
+        className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg ml-2 sm:ml-3"
         aria-label="Próxima semana"
       >
         <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
