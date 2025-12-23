@@ -42,7 +42,7 @@ export default function EstatisticasPage() {
       <header
         className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) - 15px)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px) - 18px)",
         }}
       >
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
