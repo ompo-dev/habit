@@ -35,6 +35,11 @@ export const metadata: Metadata = {
     ],
     apple: [
       {
+        url: "/apple-icon-180.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+      {
         url: "/apple-icon.png",
         sizes: "180x180",
         type: "image/png",
@@ -53,6 +58,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: "#6366F1",
+  // Meta tags adicionais para iOS PWA
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -72,6 +79,24 @@ export default function RootLayout({
         />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+        {/* Meta tags para PWA no iOS - Essenciais para instalação */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <meta name="apple-mobile-web-app-title" content="Habits" />
+        <meta name="mobile-web-app-capable" content="yes" />
+
+        {/* Apple Touch Icons - iOS requer ícone de 180x180px */}
+        <link
+          rel="apple-touch-icon"
+          href="/apple-icon-180.png"
+          sizes="180x180"
+        />
+        <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
       </head>
       <body className={`font-sans antialiased min-h-screen`}>
         <NuqsAdapter>
