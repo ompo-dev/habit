@@ -57,6 +57,7 @@ export interface CreateHabitDTO {
 
 export interface UpdateHabitDTO extends Partial<CreateHabitDTO> {
   order?: number
+  backgroundColor?: string
 }
 
 export interface HabitTemplate {

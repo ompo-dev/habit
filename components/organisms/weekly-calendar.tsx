@@ -186,6 +186,24 @@ export function WeeklyCalendar() {
                   </svg>
                 )}
 
+                {/* Círculo completo quando 100% concluído */}
+                {isCompleted && (
+                  <svg
+                    className="absolute inset-0 transition-opacity duration-200"
+                    width="38"
+                    height="38"
+                    viewBox="0 0 38 38"
+                  >
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r={radius}
+                      fill={isSelected ? "white" : "rgb(139, 92, 246)"}
+                      className="transition-all duration-300"
+                    />
+                  </svg>
+                )}
+
                 {/* Número */}
                 <motion.div
                   animate={{
@@ -193,12 +211,12 @@ export function WeeklyCalendar() {
                   }}
                   transition={{ duration: 0.2 }}
                   className={cn(
-                    "flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full transition-all duration-200",
+                    "relative flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center transition-all duration-200",
                     "text-xs sm:text-sm font-semibold",
                     // Completo
-                    isCompleted && !isSelected && "bg-primary text-black",
+                    isCompleted && !isSelected && "text-white",
                     // Completo + Selecionado
-                    isCompleted && isSelected && "bg-white text-primary",
+                    isCompleted && isSelected && "text-primary",
                     // Parcial (o ring já está visível)
                     isPartial && !isSelected && "text-white/70",
                     isPartial && isSelected && "text-white",

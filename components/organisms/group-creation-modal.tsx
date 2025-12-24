@@ -227,106 +227,111 @@ export function GroupCreationModal() {
             onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto",
-              "bg-background/95 backdrop-blur-3xl border border-white/15 p-6 shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
+              "relative w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh]",
+              "bg-background/95 backdrop-blur-3xl shadow-[0_20px_60px_0_rgba(0,0,0,0.5)]",
+              "flex flex-col",
               isAtTop ? "cursor-grab active:cursor-grabbing" : ""
             )}
-            style={{ touchAction: "pan-y" }}
+            style={{ touchAction: isAtTop ? "pan-y" : "auto" }}
           >
             {/* Handle para arrastar - indicador visual */}
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/30" />
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center justify-between mb-6 sticky top-0 bg-background/95 pb-4 border-b border-white/10 backdrop-blur-xl z-10"
-            >
-              <h2 className="text-2xl font-bold text-white">
-                {editingGroupId
-                  ? "Editar Grupo"
-                  : sessionStorage.getItem("selectedGroupTemplate")
-                  ? "Personalizar Grupo"
-                  : "Criar Grupo"}
-              </h2>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleSave}
-                disabled={!name}
-                className={cn(
-                  "flex h-10 px-6 items-center justify-center rounded-full transition-all font-medium shadow-lg",
-                  name
-                    ? "bg-green-500 hover:bg-green-600 text-white"
-                    : "bg-white/10 cursor-not-allowed opacity-50 text-white/40"
-                )}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/30 z-20" />
+            {/* Header fixo com fundo */}
+            <div className="relative pt-6 px-6 pb-0 bg-background/95 backdrop-blur-xl border-b border-white/10 z-10">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center justify-between pb-4"
               >
-                <Check className="h-5 w-5 mr-2" />
-                {editingGroupId
-                  ? "Salvar"
-                  : sessionStorage.getItem("selectedGroupTemplate")
-                  ? "Add"
-                  : "Criar"}
-              </motion.button>
-            </motion.div>
+                <h2 className="text-2xl font-bold text-white">
+                  {editingGroupId
+                    ? "Editar Grupo"
+                    : sessionStorage.getItem("selectedGroupTemplate")
+                    ? "Personalizar Grupo"
+                    : "Criar Grupo"}
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleSave}
+                  disabled={!name}
+                  className={cn(
+                    "flex h-10 px-6 items-center justify-center rounded-full transition-all font-medium shadow-lg",
+                    name
+                      ? "bg-green-500 hover:bg-green-600 text-white"
+                      : "bg-white/10 cursor-not-allowed opacity-50 text-white/40"
+                  )}
+                >
+                  <Check className="h-5 w-5 mr-2" />
+                  {editingGroupId
+                    ? "Salvar"
+                    : sessionStorage.getItem("selectedGroupTemplate")
+                    ? "Add"
+                    : "Criar"}
+                </motion.button>
+              </motion.div>
+            </div>
 
-        {/* Preview */}
-        <PreviewCard
-          icon={selectedIcon}
-          title={name}
-          subtitle={
-            (() => {
-              const saved = sessionStorage.getItem("selectedGroupTemplate");
-              return saved
-                ? JSON.parse(saved).description
-                : "Organize seus hábitos";
-            })()
-          }
-          color={selectedColor}
-        />
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Preview */}
+              <PreviewCard
+                icon={selectedIcon}
+                title={name}
+                subtitle={(() => {
+                  const saved = sessionStorage.getItem("selectedGroupTemplate");
+                  return saved
+                    ? JSON.parse(saved).description
+                    : "Organize seus hábitos";
+                })()}
+                color={selectedColor}
+              />
 
-        {/* Nome */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-2">
-            Nome do Grupo *
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-xl"
-            placeholder="Ex: Saúde, Produtividade, Estudos..."
-          />
-        </div>
+              {/* Nome */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white mb-2">
+                  Nome do Grupo *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-xl"
+                  placeholder="Ex: Saúde, Produtividade, Estudos..."
+                />
+              </div>
 
-        {/* Ícones */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-3">
-            Ícone *
-          </label>
-          <IconPicker
-            icons={POPULAR_ICONS}
-            selectedIcon={selectedIcon}
-            onSelect={setSelectedIcon}
-          />
-        </div>
+              {/* Ícones */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white mb-3">
+                  Ícone *
+                </label>
+                <IconPicker
+                  icons={POPULAR_ICONS}
+                  selectedIcon={selectedIcon}
+                  onSelect={setSelectedIcon}
+                />
+              </div>
 
-        {/* Cores */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white mb-3">
-            Cor *
-          </label>
-          <ColorPicker
-            colors={COLORS}
-            selectedColor={selectedColor}
-            onSelect={(color) =>
-              setSelectedColor(typeof color === "string" ? color : color.primary)
-            }
-          />
-        </div>
+              {/* Cores */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white mb-3">
+                  Cor *
+                </label>
+                <ColorPicker
+                  colors={COLORS}
+                  selectedColor={selectedColor}
+                  onSelect={(color) =>
+                    setSelectedColor(
+                      typeof color === "string" ? color : color.primary
+                    )
+                  }
+                />
+              </div>
 
-            {/* Espaçamento final */}
-            <div className="h-4"></div>
+              {/* Espaçamento final */}
+              <div className="h-4"></div>
+            </div>
           </motion.div>
         </motion.div>
       )}
