@@ -1,6 +1,7 @@
 "use client";
 import { ArrowLeft, Download, Upload, Trash2, Database } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CACHE_VERSION } from "@/lib/constants/version";
 import { useSettingsActions } from "@/lib/hooks/use-settings-actions";
 import { ClientProviders } from "@/app/client-providers";
@@ -17,6 +18,10 @@ function ConfiguracoesContent() {
     stats,
   } = useSettingsActions();
 
+  // Verifica se está sendo usado como página ou como tab
+  const pathname = usePathname();
+  const isStandalonePage = pathname === "/configuracoes";
+
   return (
     <div
       className="bg-background"
@@ -26,12 +31,14 @@ function ConfiguracoesContent() {
     >
       <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
-          <Link
-            href="/"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+          {isStandalonePage && (
+            <Link
+              href="/"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          )}
           <h1 className="text-2xl font-bold text-white">Configurações</h1>
         </div>
       </header>
@@ -119,9 +126,18 @@ function ConfiguracoesContent() {
 }
 
 export default function ConfiguracoesPage() {
-  return (
-    <ClientProviders>
-      <ConfiguracoesContent />
-    </ClientProviders>
-  );
+  const pathname = usePathname();
+  const isStandalonePage = pathname === "/configuracoes";
+
+  // Se for página standalone, precisa do ClientProviders
+  // Se for usado como tab, não precisa (já está no wrapper principal)
+  if (isStandalonePage) {
+    return (
+      <ClientProviders>
+        <ConfiguracoesContent />
+      </ClientProviders>
+    );
+  }
+
+  return <ConfiguracoesContent />;
 }

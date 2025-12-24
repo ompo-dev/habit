@@ -19,7 +19,12 @@ export function ProgressChart({ data, className }: ProgressChartProps) {
       {data.map((item, index) => {
         const height = item.total > 0 ? (item.completed / maxValue) * 100 : 0
         const completionRate = item.total > 0 ? (item.completed / item.total) * 100 : 0
-        const dayName = new Date(item.date).toLocaleDateString('pt-BR', { weekday: 'short' })
+        
+        // Verifica se é um label de semana (ex: "Semana 1") ou uma data
+        const isWeekLabel = item.date.startsWith("Semana")
+        const dayName = isWeekLabel 
+          ? item.date 
+          : new Date(item.date).toLocaleDateString('pt-BR', { weekday: 'short' })
 
         return (
           <div key={index} className="flex flex-1 flex-col items-center gap-1">

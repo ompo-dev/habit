@@ -266,6 +266,11 @@ export function useGroupCreationModal() {
 }
 
 /**
+ * Tipo para visualização do calendário
+ */
+export type CalendarView = "week" | "month" | "year";
+
+/**
  * Hook para modo de visualização do calendário
  */
 export function useCalendarView() {
@@ -278,7 +283,7 @@ export function useCalendarView() {
 
   return {
     calendarView: state.view,
-    setCalendarView: (view: "week" | "month" | "year") => setState({ view }),
+    setCalendarView: (view: CalendarView) => setState({ view }),
   }
 }
 

@@ -1,166 +1,159 @@
 "use client";
-import {
-  ArrowLeft,
-  Flame,
-  Target,
-  TrendingUp,
-  Calendar,
-  Award,
-  BarChart3,
-} from "lucide-react";
-import Link from "next/link";
+
+import { useMemo, useEffect } from "react";
 import { useHabitsStore } from "@/lib/stores/habits-store";
-import { StatCard } from "@/components/molecules/stat-card";
-import { HabitStatsList } from "@/components/organisms/habit-stats-list";
-import { ProgressChart } from "@/components/molecules/progress-chart";
-import { CategoryStats } from "@/components/molecules/category-stats";
-import {
-  useHabitData,
-  useHabitStatistics,
-  useProgressData,
-} from "@/lib/hooks/use-habit-data";
-import type { HabitCategory } from "@/lib/types/habit";
+import { useHabitData, useHabitStatistics } from "@/lib/hooks/use-habit-data";
+import { useSelectedDay, useCalendarView } from "@/lib/hooks/use-search-params";
+import { useDateRange } from "@/lib/hooks/use-date-range";
+import { usePeriodStats } from "@/lib/hooks/use-period-stats";
+import { StatisticsHeader } from "@/components/organisms/statistics/statistics-header";
+import { StatisticsCalendarSection } from "@/components/organisms/statistics/statistics-calendar-section";
+import { StatisticsQuickStats } from "@/components/organisms/statistics/statistics-quick-stats";
+import { StatisticsHighlights } from "@/components/organisms/statistics/statistics-highlights";
+import { StatisticsProgressChartSection } from "@/components/organisms/statistics/statistics-progress-chart-section";
+import { StatisticsCategoryStatsSection } from "@/components/organisms/statistics/statistics-category-stats-section";
+import { StatisticsHabitStatsSection } from "@/components/organisms/statistics/statistics-habit-stats-section";
 
 export default function EstatisticasPage() {
-  useHabitData(); // Carrega dados mock
-  const statistics = useHabitStatistics();
-  const { last7DaysProgress } = useProgressData();
-  const { habits } = useHabitsStore();
+  // Log inicial para verificar se o componente está renderizando
+  console.log("🚀 EstatisticasPage - Componente renderizado");
 
-  const {
-    totalStreak,
-    completionRateToday,
-    statsByCategory,
-    thisWeekCompletions,
-    thisMonthCompletions,
-    mostConsistent,
-    bestCompletion,
-  } = statistics;
+  useHabitData(); // Carrega dados mock
+  const { selectedDay, setSelectedDay } = useSelectedDay();
+  const { calendarView, setCalendarView } = useCalendarView();
+  const { habits, progress } = useHabitsStore();
+
+  // Log imediato para verificar valores
+  console.log("📊 EstatisticasPage - Valores iniciais:", {
+    selectedDay: selectedDay?.toString(),
+    selectedDayTime: selectedDay?.getTime(),
+    calendarView,
+    habitsCount: habits.length,
+    progressCount: progress.length,
+    urlParams: typeof window !== "undefined" ? window.location.search : "",
+  });
+
+  // Serializa a data para garantir reatividade - força recálculo quando muda
+  // IMPORTANTE: Usa useMemo para garantir que selectedDayISO muda quando selectedDay muda
+  // Compara o timestamp para detectar mudanças mesmo se o objeto Date for o mesmo
+  const selectedDayTimestamp = selectedDay?.getTime() || 0;
+  const selectedDayISO = useMemo(
+    () => {
+      const iso = selectedDay?.toISOString().split("T")[0] || "";
+      console.log(
+        "📅 selectedDayISO calculado:",
+        iso,
+        "timestamp:",
+        selectedDayTimestamp
+      );
+      return iso;
+    },
+    [selectedDayTimestamp] // Usa getTime() para detectar mudanças
+  );
+
+  const selectedDayKey = useMemo(() => {
+    const key = `${selectedDayISO}-${calendarView}`;
+    console.log("🔑 selectedDayKey calculado:", key);
+    return key;
+  }, [selectedDayISO, calendarView]);
+
+  // Debug: log para verificar mudanças e URL
+  useEffect(() => {
+    console.log("🔄 EstatisticasPage - useEffect executado");
+    const urlParams =
+      typeof window !== "undefined" ? window.location.search : "";
+    const urlDay = urlParams.match(/day=(\d+)/)?.[1];
+
+    console.log("🔄 EstatisticasPage - Mudança detectada:", {
+      selectedDayRaw: selectedDay?.toString(),
+      selectedDayISO,
+      selectedDayYear: selectedDay?.getFullYear(),
+      selectedDayMonth: selectedDay?.getMonth()
+        ? selectedDay.getMonth() + 1
+        : null,
+      selectedDayDate: selectedDay?.getDate(),
+      calendarView,
+      selectedDayKey,
+      urlParams,
+      urlDay,
+      progressCount: progress.length,
+      habitsCount: habits.length,
+    });
+  }, [
+    selectedDayISO,
+    calendarView,
+    selectedDayKey,
+    progress.length,
+    habits.length,
+    selectedDayTimestamp,
+  ]);
+
+  // Calcula o período baseado na view e data selecionada
+  // Passa selectedDayISO para garantir reatividade
+  const dateRange = useDateRange(selectedDay, calendarView, selectedDayISO);
+
+  // Calcula estatísticas do período
+  const selectedDayTimestampForStats = selectedDay.getTime();
+  const periodStats = usePeriodStats(
+    habits,
+    progress,
+    dateRange,
+    selectedDayTimestampForStats,
+    calendarView,
+    selectedDayKey // Passa selectedDayKey para forçar recálculo
+  );
+
+  // Estatísticas gerais (para streak total)
+  const statistics = useHabitStatistics();
 
   return (
-    <div 
+    <div
       className="bg-background"
       style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <header
-        className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-lg"
-        style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) - 18px)",
-        }}
-      >
-        <div className="mx-auto flex max-w-lg items-center gap-4 px-6 py-4">
-          <Link
-            href="/"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-2xl font-bold text-white">Estatísticas</h1>
-        </div>
-      </header>
+      <StatisticsHeader
+        calendarView={calendarView}
+        onViewChange={setCalendarView}
+      />
 
-      <main className="mx-auto max-w-lg px-6 py-6">
+      <main className="mx-auto max-w-lg px-6 py-6" key={selectedDayKey}>
+        <StatisticsCalendarSection calendarView={calendarView} />
+
         {/* Quick Stats Grid */}
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <StatCard
-            icon={<Flame className="h-5 w-5 text-orange-400" />}
-            label="Streak Total"
-            value={totalStreak}
-            color="bg-orange-500/20"
-          />
-          <StatCard
-            icon={<Target className="h-5 w-5 text-emerald-400" />}
-            label="Taxa Hoje"
-            value={`${completionRateToday}%`}
-            color="bg-emerald-500/20"
-          />
-          <StatCard
-            icon={<TrendingUp className="h-5 w-5 text-blue-400" />}
-            label="Esta Semana"
-            value={thisWeekCompletions}
-            color="bg-blue-500/20"
-          />
-          <StatCard
-            icon={<Calendar className="h-5 w-5 text-purple-400" />}
-            label="Este Mês"
-            value={thisMonthCompletions}
-            color="bg-purple-500/20"
+          <StatisticsQuickStats
+            key={`quick-stats-${selectedDayKey}`}
+            calendarView={calendarView}
+            periodStats={periodStats}
+            totalStreak={statistics.totalStreak}
           />
         </div>
 
-        {/* Destaques */}
-        {(mostConsistent || bestCompletion) && (
-          <div className="mb-6">
-            <h2 className="mb-3 text-lg font-bold text-white">Destaques</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {mostConsistent && (
-                <div className="rounded-2xl bg-linear-to-r from-orange-500/20 to-red-500/20 p-4 border border-orange-500/30 backdrop-blur-xl shadow-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Award className="h-5 w-5 text-orange-400" />
-                    <h3 className="font-semibold text-white">
-                      Mais Consistente
-                    </h3>
-                  </div>
-                  <p className="text-white/80">
-                    {habits.find((h) => h.id === mostConsistent.habitId)?.title}
-                  </p>
-                  <p className="text-sm text-white/60 mt-1">
-                    {mostConsistent.currentStreak} dias de sequência
-                  </p>
-                </div>
-              )}
-              {bestCompletion && (
-                <div className="rounded-2xl bg-linear-to-r from-emerald-500/20 to-cyan-500/20 p-4 border border-emerald-500/30 backdrop-blur-xl shadow-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <TrendingUp className="h-5 w-5 text-emerald-400" />
-                    <h3 className="font-semibold text-white">
-                      Melhor Performance
-                    </h3>
-                  </div>
-                  <p className="text-white/80">
-                    {habits.find((h) => h.id === bestCompletion.habitId)?.title}
-                  </p>
-                  <p className="text-sm text-white/60 mt-1">
-                    {bestCompletion.completionRate}% de conclusão
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <StatisticsHighlights
+          key={`highlights-${selectedDayKey}`}
+          calendarView={calendarView}
+          mostConsistent={periodStats.mostConsistentInPeriod}
+          bestCompletion={periodStats.bestCompletionInPeriod}
+          habits={habits}
+        />
 
-        {/* Progresso da Semana */}
-        <div className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-white">Últimos 7 Dias</h2>
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-xl border border-white/8 shadow-[0_4px_16px_0_rgba(0,0,0,0.25)]">
-            <ProgressChart data={last7DaysProgress} />
-          </div>
-        </div>
+        <StatisticsProgressChartSection
+          key={`progress-${selectedDayKey}`}
+          calendarView={calendarView}
+          dateRange={dateRange}
+          periodProgress={periodStats.periodProgress}
+        />
 
-        {/* Estatísticas por Categoria */}
-        <div className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-white">Por Categoria</h2>
-          <div className="space-y-3">
-            {Object.entries(statsByCategory).map(([category, stats]) => (
-              <CategoryStats
-                key={category}
-                category={category as HabitCategory}
-                count={stats.count}
-                completed={stats.completed}
-                total={stats.total}
-              />
-            ))}
-          </div>
-        </div>
+        <StatisticsCategoryStatsSection
+          key={`category-${selectedDayKey}`}
+          categoryStats={periodStats.categoryStats}
+        />
 
-        {/* Habit Stats */}
-        <div>
-          <h2 className="mb-3 text-lg font-bold text-white flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Por Hábito
-          </h2>
-          <HabitStatsList />
-        </div>
+        <StatisticsHabitStatsSection
+          key={`habit-stats-${selectedDayKey}`}
+          habitStats={periodStats.habitStatsInPeriod}
+          habits={habits}
+        />
       </main>
     </div>
   );
