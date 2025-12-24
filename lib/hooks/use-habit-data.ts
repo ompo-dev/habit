@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useHabitsStore } from "@/lib/stores/habits-store";
 
 /**
@@ -9,8 +9,12 @@ const MOCK_DATA_LOADED_KEY = "habits-mock-data-loaded";
 
 export function useHabitData() {
   const { habits, loadMockData } = useHabitsStore();
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
+    // Evita carregar múltiplas vezes
+    if (hasLoadedRef.current) return;
+    
     // Aguarda um tick para garantir que o persist hydrate já aconteceu
     const timer = setTimeout(() => {
       // Verifica se os dados mock já foram carregados alguma vez
@@ -21,11 +25,14 @@ export function useHabitData() {
       // 1. Não houver hábitos
       // 2. Os dados mock NÃO foram carregados anteriormente (primeira vez)
       if (habits.length === 0 && !mockDataAlreadyLoaded) {
+        hasLoadedRef.current = true;
         console.log("🔄 Carregando dados mock pela primeira vez...");
         loadMockData(); // A função loadMockData já define a flag no localStorage
       } else if (habits.length > 0) {
+        hasLoadedRef.current = true;
         console.log(`✅ ${habits.length} hábitos já carregados`);
       } else {
+        hasLoadedRef.current = true;
         console.log(
           "⏭️ Pulando carregamento automático (dados mock já foram carregados ou foram limpos)"
         );
@@ -33,7 +40,7 @@ export function useHabitData() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [habits.length, loadMockData]);
+  }, [habits.length]); // Removido loadMockData da dependência para evitar re-renders
 
   return {
     isLoaded: habits.length > 0,

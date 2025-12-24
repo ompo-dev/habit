@@ -13,10 +13,10 @@ import {
   useAddToGroup,
   useHabitTemplatesModal,
 } from "@/lib/hooks/use-search-params";
-import { useHydratedValue } from "@/lib/hooks/use-hydration";
-import { useEffect, useRef, memo, useMemo } from "react";
+import { useHydration } from "@/lib/hooks/use-hydration";
+import { useEffect, useRef, useMemo } from "react";
 
-export const HabitList = memo(function HabitList() {
+export const HabitList = function HabitList() {
   const { selectedDate } = useUIStore();
   const {
     getHabitsWithProgress,
@@ -30,7 +30,6 @@ export const HabitList = memo(function HabitList() {
   const { openHabit } = useSelectedHabit();
   const { startAddingToGroup } = useAddToGroup();
   const { open: openTemplatesModal } = useHabitTemplatesModal();
-  const hasInitialized = useRef(false);
 
   const handleAddToGroup = (groupId: string) => {
     startAddingToGroup(groupId);
@@ -40,9 +39,18 @@ export const HabitList = memo(function HabitList() {
   const { confirm } = useDialog();
 
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    const groupHabits = getHabitsByGroup(groupId);
+    const habitCount = groupHabits.length;
+
     const confirmed = await confirm({
       title: "Excluir grupo",
-      description: `Tem certeza que deseja excluir o grupo "${groupName}"?\n\nOs hábitos deste grupo não serão excluídos, apenas removidos do grupo.`,
+      description: `Tem certeza que deseja excluir o grupo "${groupName}"?\n\n${
+        habitCount > 0
+          ? `Todos os ${habitCount} hábito${
+              habitCount > 1 ? "s" : ""
+            } deste grupo também serão excluído${habitCount > 1 ? "s" : ""}.`
+          : "Este grupo está vazio."
+      }`,
       confirmText: "Sim, excluir",
       cancelText: "Cancelar",
       variant: "danger",
@@ -53,35 +61,27 @@ export const HabitList = memo(function HabitList() {
   };
 
   // Previne erro de hidratação - só mostra dados após montar no cliente
-  const allHabits = useHydratedValue(
-    () => getHabitsWithProgress(selectedDate),
-    []
-  );
-  
+  // Mas ainda reage a mudanças no store
+  const isHydrated = useHydration();
+
+  // Obtém dados diretamente do store - Zustand notifica automaticamente quando mudam
+  const allHabits = isHydrated ? getHabitsWithProgress(selectedDate) : [];
+  const hydratedGroups = isHydrated ? groups : [];
+
   // Memoiza ungroupedHabits para evitar recálculos desnecessários
   const ungroupedHabits = useMemo(
     () => allHabits.filter((h) => !h.groupId),
     [allHabits]
   );
 
-  // Abre todos os grupos por padrão na primeira renderização
-  useEffect(() => {
-    if (
-      !hasInitialized.current &&
-      groups.length > 0 &&
-      openGroups.length === 0
-    ) {
-      hasInitialized.current = true;
-      // Abre todos os grupos (mesmo os vazios)
-      groups.forEach((group) => {
-        openGroup(group.id);
-      });
-    }
-  }, [groups, openGroups, openGroup]);
-
-  if (allHabits.length === 0) {
+  // Mostra mensagem vazia apenas se não houver hábitos E não houver grupos
+  if (allHabits.length === 0 && hydratedGroups.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16" role="status" aria-live="polite">
+      <div
+        className="flex flex-col items-center justify-center gap-4 py-16"
+        role="status"
+        aria-live="polite"
+      >
         <Target className="h-16 w-16 text-white/20" aria-hidden="true" />
         <p className="text-center text-white/60">
           Nenhum hábito criado ainda.
@@ -115,21 +115,22 @@ export const HabitList = memo(function HabitList() {
   };
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex flex-col gap-4"
-    >
-      {groups.map((group, groupIndex) => {
+    <div className="flex flex-col gap-4">
+      {hydratedGroups.map((group, groupIndex) => {
         const groupHabits = getHabitsByGroup(group.id);
         const isExpanded = isGroupOpen(group.id);
 
         return (
           <motion.div
             key={group.id}
-            variants={itemVariants}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{
+              duration: 0.3,
+              ease: [0.4, 0, 0.2, 1],
+              delay: groupIndex * 0.05,
+            }}
             className="flex flex-col gap-3"
           >
             <GroupHeader
@@ -172,7 +173,7 @@ export const HabitList = memo(function HabitList() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: groupHabits.length * 0.05 + 0.1 }}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 py-1"
                       >
                         <motion.button
                           whileHover={{ scale: 1.02 }}
@@ -205,7 +206,7 @@ export const HabitList = memo(function HabitList() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-center py-8"
+                      className="text-center py-2"
                     >
                       <p className="text-white/40 text-sm mb-4">
                         Nenhum hábito neste grupo ainda.
@@ -267,6 +268,6 @@ export const HabitList = memo(function HabitList() {
           ))}
         </motion.div>
       )}
-    </motion.div>
+    </div>
   );
-});
+};

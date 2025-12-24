@@ -646,25 +646,51 @@ export const useHabitsStore = create<HabitsState>()(
         const previousGroup = get().groups.find((g) => g.id === id);
         if (!previousGroup) return;
 
+        // Coleta hábitos e progressos do grupo para rollback
+        const groupHabits = get().habits.filter((h) => h.groupId === id);
+        const groupHabitIds = groupHabits.map((h) => h.id);
+        const groupProgress = get().progress.filter((p) =>
+          groupHabitIds.includes(p.habitId)
+        );
+
+        // Update otimista: remove grupo e exclui hábitos do grupo
         set((state) => ({
           groups: state.groups.filter((g) => g.id !== id),
-          habits: state.habits.map((h) =>
-            h.groupId === id ? { ...h, groupId: null } : h
+          habits: state.habits.filter((h) => h.groupId !== id),
+          progress: state.progress.filter(
+            (p) => !groupHabitIds.includes(p.habitId)
           ),
+          selectedHabitId: groupHabitIds.includes(state.selectedHabitId || "")
+            ? null
+            : state.selectedHabitId,
           pendingOperations: state.pendingOperations + 1,
         }));
 
         try {
+          // Exclui hábitos do grupo no servidor
+          await Promise.all(
+            groupHabitIds.map((habitId) => HabitsAPI.deleteHabit(habitId))
+          );
           await HabitsAPI.deleteGroup(id);
 
           set((state) => ({
             pendingOperations: state.pendingOperations - 1,
           }));
 
-          toast.success("Grupo excluído");
+          const habitCount = groupHabits.length;
+          toast.success(
+            `Grupo excluído${
+              habitCount > 0
+                ? ` com ${habitCount} hábito${habitCount > 1 ? "s" : ""}`
+                : ""
+            }`
+          );
         } catch (error) {
+          // Rollback
           set((state) => ({
             groups: [...state.groups, previousGroup],
+            habits: [...state.habits, ...groupHabits],
+            progress: [...state.progress, ...groupProgress],
             pendingOperations: state.pendingOperations - 1,
           }));
 

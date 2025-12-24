@@ -4,10 +4,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
+import { AppUpdatingScreenWrapper } from "@/components/organisms/app-updating-screen-wrapper";
 import { BottomNavigation } from "@/components/organisms/bottom-navigation";
 import { PWAInstallBanner } from "@/components/organisms/pwa-install-banner";
 import { PWAUpdateBanner } from "@/components/organisms/pwa-update-banner";
 import { OfflineIndicator } from "@/components/organisms/offline-indicator";
+import { AppUpdatingScreen } from "@/components/organisms/app-updating-screen";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -105,6 +107,7 @@ export default function RootLayout({
         <NuqsAdapter>
           {children}
           <Suspense fallback={null}>
+            <AppUpdatingScreenWrapper />
             <BottomNavigation />
             <PWAInstallBanner />
             <PWAUpdateBanner />

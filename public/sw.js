@@ -1,7 +1,7 @@
 // Service Worker para PWA - Habit Builder
 // IMPORTANTE: Alterar a versão do cache quando houver atualizações significativas
 // Esta versão deve ser mantida sincronizada com lib/constants/version.ts
-const CACHE_VERSION = "v1.7.3";
+const CACHE_VERSION = "v1.8.0";
 const CACHE_NAME = `habit-builder-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `habit-builder-runtime-${CACHE_VERSION}`;
 
@@ -19,9 +19,14 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
   console.log("[SW] Instalando Service Worker...", CACHE_VERSION);
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(STATIC_ASSETS);
+      })
+      .catch((error) => {
+        console.error("[SW] Erro ao instalar cache:", error);
+      })
   );
   // Força ativação imediata do novo service worker
   self.skipWaiting();
@@ -31,36 +36,53 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   console.log("[SW] Ativando Service Worker...", CACHE_VERSION);
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      // Deleta todos os caches antigos que não correspondem à versão atual
-      return Promise.all(
-        cacheNames
-          .filter((name) => {
-            return (
-              name.startsWith("habit-builder-") &&
-              name !== CACHE_NAME &&
-              name !== RUNTIME_CACHE
-            );
-          })
-          .map((name) => {
-            console.log("[SW] Removendo cache antigo:", name);
-            return caches.delete(name);
-          })
-      );
-    })
+    caches
+      .keys()
+      .then((cacheNames) => {
+        // Deleta todos os caches antigos que não correspondem à versão atual
+        return Promise.all(
+          cacheNames
+            .filter((name) => {
+              return (
+                name.startsWith("habit-builder-") &&
+                name !== CACHE_NAME &&
+                name !== RUNTIME_CACHE
+              );
+            })
+            .map((name) => {
+              console.log("[SW] Removendo cache antigo:", name);
+              return caches.delete(name);
+            })
+        );
+      })
+      .catch((error) => {
+        console.error("[SW] Erro ao limpar caches antigos:", error);
+      })
   );
   // Assume controle imediato de todas as páginas
-  return self.clients.claim().then(() => {
-    // Notifica todos os clientes sobre a atualização
-    return self.clients.matchAll().then((clients) => {
-      clients.forEach((client) => {
-        client.postMessage({
-          type: "SW_UPDATED",
-          version: CACHE_VERSION,
+  event.waitUntil(
+    self.clients
+      .claim()
+      .then(() => {
+        // Notifica todos os clientes sobre a atualização
+        return self.clients.matchAll();
+      })
+      .then((clients) => {
+        clients.forEach((client) => {
+          try {
+            client.postMessage({
+              type: "SW_UPDATED",
+              version: CACHE_VERSION,
+            });
+          } catch (error) {
+            console.error("[SW] Erro ao enviar mensagem para cliente:", error);
+          }
         });
-      });
-    });
-  });
+      })
+      .catch((error) => {
+        console.error("[SW] Erro ao assumir controle:", error);
+      })
+  );
 });
 
 // Estratégia: Network First, fallback para Cache
@@ -110,7 +132,11 @@ self.addEventListener("fetch", (event) => {
 
 // Mensagem para atualizar cache
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
+  try {
+    if (event.data && event.data.type === "SKIP_WAITING") {
+      self.skipWaiting();
+    }
+  } catch (error) {
+    console.error("[SW] Erro ao processar mensagem:", error);
   }
 });

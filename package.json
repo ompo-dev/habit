@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev --turbo",
-    "dev:webpack": "next dev --webpack",
+    "dev": "node scripts/dev.js",
+    "dev:webpack": "node scripts/dev.js --webpack",
     "lint": "eslint .",
     "start": "next start",
     "generate-icons": "node scripts/generate-icons.js"

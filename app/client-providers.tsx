@@ -39,6 +39,26 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     }
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Ignora erros conhecidos e não críticos
+      const reason = event.reason;
+      const reasonString = reason?.toString() || "";
+      const reasonMessage = reason?.message || "";
+
+      // Ignora erros de WebSocket do HMR (Hot Module Replacement)
+      if (
+        reasonString.includes("WebSocket") ||
+        reasonString.includes("webpack-hmr") ||
+        reasonMessage.includes("WebSocket") ||
+        reasonMessage.includes("Failed to fetch")
+      ) {
+        return; // Silenciosamente ignora esses erros
+      }
+
+      // Ignora erros vazios ou undefined
+      if (!reason || (typeof reason === "object" && Object.keys(reason).length === 0)) {
+        return;
+      }
+
       console.error("🚨 Promise rejeitada não tratada:", {
         reason: event.reason,
         timestamp: new Date().toISOString(),

@@ -10,7 +10,7 @@ import { TimerControl } from "@/components/molecules/timer-control";
 import { PomodoroControl } from "@/components/molecules/pomodoro-control";
 import { useHabitsStore } from "@/lib/stores/habits-store";
 import { useUIStore } from "@/lib/stores/ui-store";
-import { HabitCustomizationModal } from "./habit-customization-modal";
+import { HabitCreationModal } from "./habit-creation-modal";
 import { useSelectedHabit } from "@/lib/hooks/use-search-params";
 import { useDialog } from "@/lib/contexts/dialog-context";
 import { useHabitProgress } from "@/lib/hooks/use-habit-progress";
@@ -324,10 +324,10 @@ export const HabitModal = memo(function HabitModal() {
           </motion.div>
 
           {selectedHabitId && (
-            <HabitCustomizationModal
-              habitId={selectedHabitId}
-              isOpen={isCustomizationOpen}
-              onClose={() => setIsCustomizationOpen(false)}
+            <HabitCreationModal
+              editingHabitId={selectedHabitId}
+              isEditingOpen={isCustomizationOpen}
+              onEditingClose={() => setIsCustomizationOpen(false)}
             />
           )}
         </motion.div>

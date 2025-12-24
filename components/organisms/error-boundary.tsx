@@ -65,6 +65,25 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Ignora erros relacionados à atualização do Service Worker
+    const errorMessage = error.message || "";
+    const errorStack = error.stack || "";
+
+    if (
+      errorMessage.includes("ServiceWorker") ||
+      errorMessage.includes("service worker") ||
+      errorMessage.includes("SW_UPDATED") ||
+      errorStack.includes("sw.js") ||
+      errorStack.includes("ServiceWorker")
+    ) {
+      // Durante atualização do SW, apenas loga e não mostra tela de erro
+      console.log(
+        "ℹ️ Erro relacionado à atualização do Service Worker (ignorado):",
+        error.message
+      );
+      return;
+    }
+
     // Log completo do erro
     const errorDetails = {
       error: {

@@ -109,11 +109,29 @@ const HABIT_TYPES = [
   },
 ];
 
-export function HabitCreationModal() {
-  const { addHabit, groups } = useHabitsStore();
+interface HabitCreationModalProps {
+  editingHabitId?: string;
+  isEditingOpen?: boolean;
+  onEditingClose?: () => void;
+}
+
+export function HabitCreationModal(
+  {
+    editingHabitId,
+    isEditingOpen,
+    onEditingClose,
+  }: HabitCreationModalProps = {} as HabitCreationModalProps
+) {
+  const { addHabit, updateHabit, getHabitById, groups } = useHabitsStore();
   const { isOpen, close: closeModal } = useHabitCreationModal();
   const { close: closeTemplatesModal } = useHabitTemplatesModal();
   const { addingToGroupId, cancelAdding } = useAddToGroup();
+
+  // Determina se está em modo de edição
+  const isEditing = !!editingHabitId;
+  const isModalOpen = isEditing ? isEditingOpen || false : isOpen;
+  const habit =
+    isEditing && editingHabitId ? getHabitById(editingHabitId) : null;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -135,58 +153,85 @@ export function HabitCreationModal() {
   const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
-    if (isOpen) {
-      // Tenta carregar template do sessionStorage
-      const savedTemplate = sessionStorage.getItem("selectedHabitTemplate");
-
-      if (savedTemplate) {
-        const template = JSON.parse(savedTemplate);
-        setTitle(template.title);
-        setDescription(template.description || "");
-        setSelectedIcon(template.icon);
+    if (isModalOpen) {
+      if (isEditing && habit) {
+        // Modo edição: carrega dados do hábito
+        setTitle(habit.title);
+        setDescription(habit.description || "");
+        setSelectedIcon(habit.icon);
         setSelectedColor({
-          primary: template.color,
-          background: template.backgroundColor,
+          primary: habit.color,
+          background: habit.backgroundColor || habit.color,
         });
-        setCategory(template.category);
-        setHabitType(template.habitType);
-        setTargetCount(template.targetCount);
-        setTargetMinutes(template.targetMinutes || 30);
-        setPomodoroWork(template.pomodoroWork || 25);
-        setPomodoroBreak(template.pomodoroBreak || 5);
+        setCategory(habit.category);
+        setHabitType(habit.habitType);
+        setTargetCount(habit.targetCount);
+        setTargetMinutes(habit.targetMinutes || 30);
+        setPomodoroWork(habit.pomodoroWork || 25);
+        setPomodoroBreak(habit.pomodoroBreak || 5);
+        setSelectedGroupId(habit.groupId || null);
       } else {
-        // Reset para valores padrão quando não há template
-        setTitle("");
-        setDescription("");
-        setSelectedIcon("Target");
-        setSelectedColor({ primary: "#60a5fa", background: "#1e3a8a" });
-        setCategory("bons");
-        setHabitType("counter");
-        setTargetCount(1);
-        setTargetMinutes(30);
-        setPomodoroWork(25);
-        setPomodoroBreak(5);
+        // Modo criação: tenta carregar template do sessionStorage
+        const savedTemplate = sessionStorage.getItem("selectedHabitTemplate");
+
+        if (savedTemplate) {
+          const template = JSON.parse(savedTemplate);
+          setTitle(template.title);
+          setDescription(template.description || "");
+          setSelectedIcon(template.icon);
+          setSelectedColor({
+            primary: template.color,
+            background: template.backgroundColor,
+          });
+          setCategory(template.category);
+          setHabitType(template.habitType);
+          setTargetCount(template.targetCount);
+          setTargetMinutes(template.targetMinutes || 30);
+          setPomodoroWork(template.pomodoroWork || 25);
+          setPomodoroBreak(template.pomodoroBreak || 5);
+        } else {
+          // Reset para valores padrão quando não há template
+          setTitle("");
+          setDescription("");
+          setSelectedIcon("Target");
+          setSelectedColor({ primary: "#60a5fa", background: "#1e3a8a" });
+          setCategory("bons");
+          setHabitType("counter");
+          setTargetCount(1);
+          setTargetMinutes(30);
+          setPomodoroWork(25);
+          setPomodoroBreak(5);
+        }
+
+        // Usa grupo pré-selecionado se houver
+        setSelectedGroupId(addingToGroupId || null);
       }
-
-      // Usa grupo pré-selecionado se houver
-      setSelectedGroupId(addingToGroupId || null);
     }
-  }, [isOpen, addingToGroupId]);
+  }, [isModalOpen, isEditing, habit, addingToGroupId]);
 
-  const { handleClose: handleCloseWithCleanup } = useModalWithCleanup(
-    isOpen,
-    "selectedHabitTemplate",
-    () => {
+  const handleCloseModal = () => {
+    if (isEditing && onEditingClose) {
+      onEditingClose();
+    } else {
       closeModal();
       closeTemplatesModal();
       cancelAdding();
     }
+  };
+
+  const { handleClose: handleCloseWithCleanup } = useModalWithCleanup(
+    isModalOpen && !isEditing,
+    "selectedHabitTemplate",
+    handleCloseModal
   );
+
+  // Para modo edição, usa o handler direto
+  const handleClose = isEditing ? handleCloseModal : handleCloseWithCleanup;
 
   // Monitora o scroll para saber se está no topo
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !isOpen) return;
+    if (!container || !isModalOpen) return;
 
     const handleScroll = () => {
       setIsAtTop(container.scrollTop === 0);
@@ -196,7 +241,7 @@ export function HabitCreationModal() {
     return () => {
       container.removeEventListener("scroll", handleScroll);
     };
-  }, [isOpen]);
+  }, [isModalOpen]);
 
   // Handler para drag - fecha o modal quando arrastar para baixo
   // useCallback garante que a função seja estável
@@ -204,10 +249,10 @@ export function HabitCreationModal() {
     (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       // Só fecha se estiver no topo E arrastou para baixo mais de 100px ou com velocidade alta
       if (isAtTop && (info.offset.y > 100 || info.velocity.y > 500)) {
-        handleCloseWithCleanup();
+        handleClose();
       }
     },
-    [handleCloseWithCleanup, isAtTop]
+    [handleClose, isAtTop]
   );
 
   const handleDragStart = useCallback(() => {
@@ -224,10 +269,10 @@ export function HabitCreationModal() {
     }
   }, [isAtTop]);
 
-  if (!isOpen) return null;
+  if (!isModalOpen) return null;
 
   const handleSave = () => {
-    const newHabit: any = {
+    const habitData: any = {
       title,
       description,
       icon: selectedIcon,
@@ -241,26 +286,30 @@ export function HabitCreationModal() {
     };
 
     if (habitType === "timer") {
-      newHabit.targetMinutes = targetMinutes;
+      habitData.targetMinutes = targetMinutes;
     } else if (habitType === "pomodoro") {
-      newHabit.pomodoroWork = pomodoroWork;
-      newHabit.pomodoroBreak = pomodoroBreak;
+      habitData.pomodoroWork = pomodoroWork;
+      habitData.pomodoroBreak = pomodoroBreak;
     }
 
-    addHabit(newHabit);
-    handleCloseWithCleanup();
+    if (isEditing && editingHabitId) {
+      updateHabit(editingHabitId, habitData);
+    } else {
+      addHabit(habitData);
+    }
+    handleClose();
   };
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isModalOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-60 flex items-end justify-center sm:items-center"
-          onClick={handleCloseWithCleanup}
+          onClick={handleClose}
         >
           <motion.div
             initial={{ opacity: 0 }}
@@ -306,7 +355,9 @@ export function HabitCreationModal() {
                 className="flex items-center justify-between pb-4"
               >
                 <h2 className="text-2xl font-bold text-white">
-                  {sessionStorage.getItem("selectedHabitTemplate")
+                  {isEditing
+                    ? "Editar Hábito"
+                    : sessionStorage.getItem("selectedHabitTemplate")
                     ? "Personalizar Hábito"
                     : "Criar Hábito"}
                 </h2>
@@ -323,7 +374,9 @@ export function HabitCreationModal() {
                   )}
                 >
                   <Check className="h-5 w-5 mr-2" />
-                  {sessionStorage.getItem("selectedHabitTemplate")
+                  {isEditing
+                    ? "Salvar"
+                    : sessionStorage.getItem("selectedHabitTemplate")
                     ? "Add"
                     : "Criar"}
                 </motion.button>
