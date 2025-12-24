@@ -3,12 +3,13 @@
   "version": "1.8.8",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "npm run version:sync && next build",
     "dev": "node scripts/dev.js",
     "dev:webpack": "node scripts/dev.js --webpack",
     "lint": "eslint .",
     "start": "next start",
-    "generate-icons": "node scripts/generate-icons.js"
+    "generate-icons": "node scripts/generate-icons.js",
+    "version:sync": "node scripts/sync-version.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

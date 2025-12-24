@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { Suspense, useMemo, useEffect } from "react";
 import { useHabitsStore } from "@/lib/stores/habits-store";
 import { useHabitData, useHabitStatistics } from "@/lib/hooks/use-habit-data";
 import { useSelectedDay, useCalendarView } from "@/lib/hooks/use-search-params";
@@ -14,7 +14,7 @@ import { StatisticsProgressChartSection } from "@/components/organisms/statistic
 import { StatisticsCategoryStatsSection } from "@/components/organisms/statistics/statistics-category-stats-section";
 import { StatisticsHabitStatsSection } from "@/components/organisms/statistics/statistics-habit-stats-section";
 
-export default function EstatisticasPage() {
+function EstatisticasContent() {
   // Log inicial para verificar se o componente está renderizando
   console.log("🚀 EstatisticasPage - Componente renderizado");
 
@@ -156,5 +156,25 @@ export default function EstatisticasPage() {
         />
       </main>
     </div>
+  );
+}
+
+export default function EstatisticasPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="bg-background flex items-center justify-center"
+          style={{
+            height: "100vh",
+            paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <EstatisticasContent />
+    </Suspense>
   );
 }

@@ -57,7 +57,7 @@ const GroupCreationModal = lazy(() =>
   }))
 );
 
-export default function HabitosPage() {
+function HabitosContent() {
   useHabitData(); // Carrega dados mock automaticamente
   const { getTotalStreak } = useHabitsStore();
   const { setSelectedDate } = useUIStore();
@@ -165,6 +165,26 @@ export default function HabitosPage() {
         <GroupCreationModal />
       </Suspense>
     </>
+  );
+}
+
+export default function HabitosPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="bg-background flex items-center justify-center"
+          style={{
+            height: "100vh",
+            paddingBottom: "calc(9rem + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <HabitosContent />
+    </Suspense>
   );
 }
 

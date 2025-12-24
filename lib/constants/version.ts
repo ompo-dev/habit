@@ -1,4 +1,5 @@
 // Versão da aplicação e do cache PWA
-// IMPORTANTE: Atualizar CACHE_VERSION quando houver mudanças significativas no Service Worker
-export const APP_VERSION = "1.0.0";
+// IMPORTANTE: Este arquivo é atualizado automaticamente pelo script sync-version.js
+// Para alterar a versão, edite apenas o package.json e execute: npm run version:sync
+export const APP_VERSION = "1.8.8";
 export const CACHE_VERSION = "v1.8.8";
