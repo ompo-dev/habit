@@ -1,7 +1,7 @@
 // Service Worker para PWA - Habit Builder
 // IMPORTANTE: Esta versão é atualizada automaticamente pelo script sync-version.js
 // Para alterar, edite apenas o package.json e execute: npm run version:sync
-const CACHE_VERSION = "v1.8.8";
+const CACHE_VERSION = "v2.0.0";
 const CACHE_NAME = `habit-builder-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `habit-builder-runtime-${CACHE_VERSION}`;
 

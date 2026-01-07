@@ -14,6 +14,7 @@ import { useModalWithCleanup } from "@/lib/hooks/use-modal";
 import { IconPicker } from "@/components/molecules/icon-picker";
 import { ColorPicker } from "@/components/molecules/color-picker";
 import { PreviewCard } from "@/components/molecules/preview-card";
+import { PeriodSelector } from "@/components/molecules/period-selector";
 import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { HabitCategory } from "@/lib/types/habit";
@@ -122,7 +123,9 @@ export function HabitCreationModal(
     onEditingClose,
   }: HabitCreationModalProps = {} as HabitCreationModalProps
 ) {
-  const { addHabit, updateHabit, getHabitById, groups } = useHabitsStore();
+  const { addHabit, updateHabit, getHabitById, getGroupsForDate } = useHabitsStore();
+  // Obtém grupos filtrados pela data atual (hoje) para criação de hábitos
+  const groups = getGroupsForDate(new Date());
   const { isOpen, close: closeModal } = useHabitCreationModal();
   const { close: closeTemplatesModal } = useHabitTemplatesModal();
   const { addingToGroupId, cancelAdding } = useAddToGroup();
@@ -149,6 +152,11 @@ export function HabitCreationModal(
   const [pomodoroWork, setPomodoroWork] = useState(25);
   const [pomodoroBreak, setPomodoroBreak] = useState(5);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  // Estados para período esporádico
+  const [isSporadic, setIsSporadic] = useState(false);
+  const [sporadicType, setSporadicType] = useState<"day" | "week" | "month">("day");
+  const [sporadicStartDate, setSporadicStartDate] = useState<Date | undefined>(new Date());
+  const [sporadicEndDate, setSporadicEndDate] = useState<Date | undefined>(new Date());
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
 
@@ -170,6 +178,11 @@ export function HabitCreationModal(
         setPomodoroWork(habit.pomodoroWork || 25);
         setPomodoroBreak(habit.pomodoroBreak || 5);
         setSelectedGroupId(habit.groupId || null);
+        // Carrega dados de período esporádico
+        setIsSporadic(habit.isSporadic || false);
+        setSporadicType(habit.sporadicType || "day");
+        setSporadicStartDate(habit.sporadicStartDate || new Date());
+        setSporadicEndDate(habit.sporadicEndDate || new Date());
       } else {
         // Modo criação: tenta carregar template do sessionStorage
         const savedTemplate = sessionStorage.getItem("selectedHabitTemplate");
@@ -205,6 +218,12 @@ export function HabitCreationModal(
 
         // Usa grupo pré-selecionado se houver
         setSelectedGroupId(addingToGroupId || null);
+        
+        // Reset período esporádico
+        setIsSporadic(false);
+        setSporadicType("day");
+        setSporadicStartDate(new Date());
+        setSporadicEndDate(new Date());
       }
     }
   }, [isModalOpen, isEditing, habit, addingToGroupId]);
@@ -290,6 +309,16 @@ export function HabitCreationModal(
     } else if (habitType === "pomodoro") {
       habitData.pomodoroWork = pomodoroWork;
       habitData.pomodoroBreak = pomodoroBreak;
+    }
+
+    // Adiciona dados de período esporádico se for esporádico
+    if (isSporadic && sporadicStartDate && sporadicEndDate) {
+      habitData.isSporadic = true;
+      habitData.sporadicType = sporadicType;
+      habitData.sporadicStartDate = sporadicStartDate;
+      habitData.sporadicEndDate = sporadicEndDate;
+    } else {
+      habitData.isSporadic = false;
     }
 
     if (isEditing && editingHabitId) {
@@ -471,6 +500,22 @@ export function HabitCreationModal(
                   </div>
                 </div>
               )}
+
+              {/* Período Esporádico */}
+              <div className="mb-6">
+                <PeriodSelector
+                  isSporadic={isSporadic}
+                  sporadicType={sporadicType}
+                  sporadicStartDate={sporadicStartDate}
+                  sporadicEndDate={sporadicEndDate}
+                  onSporadicChange={setIsSporadic}
+                  onTypeChange={setSporadicType}
+                  onDatesChange={(start, end) => {
+                    setSporadicStartDate(start);
+                    setSporadicEndDate(end);
+                  }}
+                />
+              </div>
 
               {/* Categoria */}
               <div className="mb-6">

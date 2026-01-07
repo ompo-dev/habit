@@ -154,6 +154,7 @@ export class HabitsAPI {
       id: crypto.randomUUID(),
       ...data,
       order: 999,
+      createdAt: new Date(),
     }
   }
 

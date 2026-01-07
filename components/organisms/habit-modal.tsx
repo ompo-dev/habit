@@ -15,6 +15,7 @@ import { useSelectedHabit } from "@/lib/hooks/use-search-params";
 import { useDialog } from "@/lib/contexts/dialog-context";
 import { useHabitProgress } from "@/lib/hooks/use-habit-progress";
 import { useModalBodyLock } from "@/lib/hooks/use-modal";
+import { combineHabitWithProgress } from "@/lib/utils/habit-helpers";
 import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -29,11 +30,26 @@ import type { HabitWithProgress } from "@/lib/types/habit";
 export const HabitModal = memo(function HabitModal() {
   const { selectedDate } = useUIStore();
   const { selectedHabitId, closeHabit, isOpen } = useSelectedHabit();
-  const { getHabitWithProgress, markComplete, undoComplete, deleteHabit } =
-    useHabitsStore();
   const { confirm } = useDialog();
 
-  const habit = selectedHabitId ? getHabitWithProgress(selectedHabitId) : null;
+  // Usa selectors do Zustand para reagir especificamente às mudanças
+  const habits = useHabitsStore((state) => state.habits);
+  const progress = useHabitsStore((state) => state.progress);
+  const markComplete = useHabitsStore((state) => state.markComplete);
+  const undoComplete = useHabitsStore((state) => state.undoComplete);
+  const deleteHabit = useHabitsStore((state) => state.deleteHabit);
+
+  // Obtém o hábito e combina com progresso usando selectedDate
+  // O Zustand já garante que o componente reage às mudanças no array progress
+  const habit = useMemo(() => {
+    if (!selectedHabitId) return null;
+    const habitData = habits.find((h) => h.id === selectedHabitId);
+    if (!habitData) return null;
+
+    // Usa o helper para combinar hábito com progresso para a data selecionada
+    return combineHabitWithProgress(habitData, progress, selectedDate);
+  }, [selectedHabitId, habits, progress, selectedDate]);
+
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

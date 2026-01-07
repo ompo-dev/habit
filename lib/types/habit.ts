@@ -21,6 +21,11 @@ export interface Habit {
   createdAt: Date
   order: number
   groupId?: string | null
+  // Período esporádico (hábito temporário)
+  isSporadic?: boolean // Se é um hábito temporário/esporádico
+  sporadicType?: "day" | "week" | "month" // Tipo de período esporádico
+  sporadicStartDate?: Date // Data de início do período
+  sporadicEndDate?: Date // Data de fim do período
 }
 
 export interface Progress {
@@ -53,6 +58,11 @@ export interface CreateHabitDTO {
   pomodoroBreak?: number
   description?: string
   groupId?: string | null
+  // Período esporádico
+  isSporadic?: boolean
+  sporadicType?: "day" | "week" | "month"
+  sporadicStartDate?: Date
+  sporadicEndDate?: Date
 }
 
 export interface UpdateHabitDTO extends Partial<CreateHabitDTO> {
@@ -80,12 +90,23 @@ export interface HabitGroup {
   icon: string
   color: string
   order: number
+  createdAt: Date
+  // Período esporádico (grupo temporário)
+  isSporadic?: boolean // Se é um grupo temporário/esporádico
+  sporadicType?: "day" | "week" | "month" // Tipo de período esporádico
+  sporadicStartDate?: Date // Data de início do período
+  sporadicEndDate?: Date // Data de fim do período
 }
 
 export interface CreateGroupDTO {
   name: string
   icon: string
   color: string
+  // Período esporádico
+  isSporadic?: boolean
+  sporadicType?: "day" | "week" | "month"
+  sporadicStartDate?: Date
+  sporadicEndDate?: Date
 }
 
 export interface UserSettings {

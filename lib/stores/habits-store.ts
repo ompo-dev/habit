@@ -82,6 +82,7 @@ interface HabitsState {
   updateGroup: (id: string, data: Partial<CreateGroupDTO>) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
   getGroupById: (id: string) => HabitGroup | undefined;
+  getGroupsForDate: (date?: Date) => HabitGroup[];
   getHabitsByGroup: (groupId: string | null) => HabitWithProgress[];
   assignHabitToGroup: (
     habitId: string,
@@ -201,10 +202,36 @@ export const useHabitsStore = create<HabitsState>()(
 
         if (!previousState.habit) return;
 
-        // Update otimista
+        // Data de hoje normalizada (sem horas)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayString = getDateString(today);
+
+        // Separa progressos: mantém os anteriores a hoje, remove apenas de hoje em diante
+        const progressToKeep = previousState.progress.filter((p) => {
+          const progressDate = new Date(p.date + "T00:00:00");
+          progressDate.setHours(0, 0, 0, 0);
+          return progressDate < today;
+        });
+
+        const progressToRemove = previousState.progress.filter((p) => {
+          const progressDate = new Date(p.date + "T00:00:00");
+          progressDate.setHours(0, 0, 0, 0);
+          return progressDate >= today;
+        });
+
+        // Update otimista: remove hábito e apenas progressos de hoje em diante
         set((state) => ({
           habits: state.habits.filter((h) => h.id !== id),
-          progress: state.progress.filter((p) => p.habitId !== id),
+          progress: state.progress.filter((p) => {
+            // Remove progressos do hábito apenas se forem de hoje em diante
+            if (p.habitId === id) {
+              const progressDate = new Date(p.date + "T00:00:00");
+              progressDate.setHours(0, 0, 0, 0);
+              return progressDate < today; // Mantém apenas progressos anteriores
+            }
+            return true; // Mantém todos os outros progressos
+          }),
           selectedHabitId:
             state.selectedHabitId === id ? null : state.selectedHabitId,
           pendingOperations: state.pendingOperations + 1,
@@ -219,7 +246,7 @@ export const useHabitsStore = create<HabitsState>()(
 
           toast.success("Hábito excluído");
         } catch (error) {
-          // Rollback
+          // Rollback: restaura hábito e todos os progressos
           set((state) => ({
             habits: [...state.habits, previousState.habit!],
             progress: [...state.progress, ...previousState.progress],
@@ -497,7 +524,45 @@ export const useHabitsStore = create<HabitsState>()(
       getHabitsWithProgress: (date = new Date()) => {
         const { habits, progress, currentDate } = get();
         const targetDate = date || currentDate;
-        return habits
+        
+        // Normaliza as datas para comparação (remove horas)
+        const targetDateNormalized = new Date(targetDate);
+        targetDateNormalized.setHours(0, 0, 0, 0);
+        
+        // Filtra hábitos que foram criados antes ou no mesmo dia da data selecionada
+        const filteredHabits = habits.filter((habit) => {
+          const createdAt = habit.createdAt instanceof Date 
+            ? habit.createdAt 
+            : new Date(habit.createdAt);
+          const createdAtNormalized = new Date(createdAt);
+          createdAtNormalized.setHours(0, 0, 0, 0);
+          
+          // Hábito só aparece se foi criado antes ou no mesmo dia da data selecionada
+          if (createdAtNormalized > targetDateNormalized) {
+            return false;
+          }
+
+          // Se é esporádico, verifica se a data está dentro do período
+          if (habit.isSporadic && habit.sporadicStartDate && habit.sporadicEndDate) {
+            const startDate = habit.sporadicStartDate instanceof Date
+              ? habit.sporadicStartDate
+              : new Date(habit.sporadicStartDate);
+            const endDate = habit.sporadicEndDate instanceof Date
+              ? habit.sporadicEndDate
+              : new Date(habit.sporadicEndDate);
+            
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            
+            // Hábito esporádico só aparece se a data está dentro do período
+            return targetDateNormalized >= startDate && targetDateNormalized <= endDate;
+          }
+
+          // Hábito permanente aparece normalmente
+          return true;
+        });
+        
+        return filteredHabits
           .sort((a, b) => a.order - b.order)
           .map((habit) =>
             combineHabitWithProgress(habit, progress, targetDate)
@@ -579,10 +644,12 @@ export const useHabitsStore = create<HabitsState>()(
       // OPTIMISTIC UPDATE: Adicionar grupo
       addGroup: async (groupData) => {
         const tempId = `temp-${Date.now()}`;
+        const now = new Date();
         const optimisticGroup: HabitGroup = {
           id: tempId,
           ...groupData,
           order: get().groups.length,
+          createdAt: now,
         };
 
         set((state) => ({
@@ -592,10 +659,15 @@ export const useHabitsStore = create<HabitsState>()(
 
         try {
           const serverGroup = await HabitsAPI.createGroup(groupData);
+          // Garante que o servidor também tenha createdAt
+          const serverGroupWithDate: HabitGroup = {
+            ...serverGroup,
+            createdAt: serverGroup.createdAt || now,
+          };
 
           set((state) => ({
             groups: state.groups.map((g) =>
-              g.id === tempId ? serverGroup : g
+              g.id === tempId ? serverGroupWithDate : g
             ),
             pendingOperations: state.pendingOperations - 1,
           }));
@@ -646,20 +718,44 @@ export const useHabitsStore = create<HabitsState>()(
         const previousGroup = get().groups.find((g) => g.id === id);
         if (!previousGroup) return;
 
+        // Data de hoje normalizada (sem horas)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayString = getDateString(today);
+
         // Coleta hábitos e progressos do grupo para rollback
         const groupHabits = get().habits.filter((h) => h.groupId === id);
         const groupHabitIds = groupHabits.map((h) => h.id);
-        const groupProgress = get().progress.filter((p) =>
+        const allGroupProgress = get().progress.filter((p) =>
           groupHabitIds.includes(p.habitId)
         );
 
-        // Update otimista: remove grupo e exclui hábitos do grupo
+        // Separa progressos: mantém os anteriores a hoje, remove apenas de hoje em diante
+        const progressToKeep = allGroupProgress.filter((p) => {
+          const progressDate = new Date(p.date + "T00:00:00");
+          progressDate.setHours(0, 0, 0, 0);
+          return progressDate < today;
+        });
+
+        const progressToRemove = allGroupProgress.filter((p) => {
+          const progressDate = new Date(p.date + "T00:00:00");
+          progressDate.setHours(0, 0, 0, 0);
+          return progressDate >= today;
+        });
+
+        // Update otimista: remove grupo e hábitos, mas preserva progressos anteriores
         set((state) => ({
           groups: state.groups.filter((g) => g.id !== id),
           habits: state.habits.filter((h) => h.groupId !== id),
-          progress: state.progress.filter(
-            (p) => !groupHabitIds.includes(p.habitId)
-          ),
+          progress: state.progress.filter((p) => {
+            // Remove progressos dos hábitos do grupo apenas se forem de hoje em diante
+            if (groupHabitIds.includes(p.habitId)) {
+              const progressDate = new Date(p.date + "T00:00:00");
+              progressDate.setHours(0, 0, 0, 0);
+              return progressDate < today; // Mantém apenas progressos anteriores
+            }
+            return true; // Mantém todos os outros progressos
+          }),
           selectedHabitId: groupHabitIds.includes(state.selectedHabitId || "")
             ? null
             : state.selectedHabitId,
@@ -667,7 +763,7 @@ export const useHabitsStore = create<HabitsState>()(
         }));
 
         try {
-          // Exclui hábitos do grupo no servidor
+          // Exclui hábitos do grupo no servidor (que já preserva histórico)
           await Promise.all(
             groupHabitIds.map((habitId) => HabitsAPI.deleteHabit(habitId))
           );
@@ -686,11 +782,11 @@ export const useHabitsStore = create<HabitsState>()(
             }`
           );
         } catch (error) {
-          // Rollback
+          // Rollback: restaura grupo, hábitos e todos os progressos
           set((state) => ({
             groups: [...state.groups, previousGroup],
             habits: [...state.habits, ...groupHabits],
-            progress: [...state.progress, ...groupProgress],
+            progress: [...state.progress, ...allGroupProgress],
             pendingOperations: state.pendingOperations - 1,
           }));
 
@@ -703,10 +799,96 @@ export const useHabitsStore = create<HabitsState>()(
         return get().groups.find((g) => g.id === id);
       },
 
+      getGroupsForDate: (date = new Date()) => {
+        const { groups, currentDate } = get();
+        const targetDate = date || currentDate;
+        
+        // Normaliza a data para comparação (remove horas)
+        const targetDateNormalized = new Date(targetDate);
+        targetDateNormalized.setHours(0, 0, 0, 0);
+        
+        // Filtra grupos que foram criados antes ou no mesmo dia da data selecionada
+        return groups.filter((group) => {
+          // Se não tem createdAt, assume que foi criado hoje (compatibilidade com grupos antigos)
+          let createdAt: Date;
+          if (!group.createdAt) {
+            createdAt = new Date(); // Fallback para grupos antigos
+          } else {
+            createdAt = group.createdAt instanceof Date 
+              ? group.createdAt 
+              : new Date(group.createdAt);
+          }
+          
+          const createdAtNormalized = new Date(createdAt);
+          createdAtNormalized.setHours(0, 0, 0, 0);
+          
+          // Grupo só aparece se foi criado antes ou no mesmo dia da data selecionada
+          if (createdAtNormalized > targetDateNormalized) {
+            return false;
+          }
+
+          // Se é esporádico, verifica se a data está dentro do período
+          if (group.isSporadic && group.sporadicStartDate && group.sporadicEndDate) {
+            const startDate = group.sporadicStartDate instanceof Date
+              ? group.sporadicStartDate
+              : new Date(group.sporadicStartDate);
+            const endDate = group.sporadicEndDate instanceof Date
+              ? group.sporadicEndDate
+              : new Date(group.sporadicEndDate);
+            
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            
+            // Grupo esporádico só aparece se a data está dentro do período
+            return targetDateNormalized >= startDate && targetDateNormalized <= endDate;
+          }
+
+          // Grupo permanente aparece normalmente
+          return true;
+        }).sort((a, b) => a.order - b.order);
+      },
+
       getHabitsByGroup: (groupId) => {
         const { habits, progress, currentDate } = get();
-        return habits
-          .filter((h) => h.groupId === groupId)
+        
+        // Normaliza a data para comparação (remove horas)
+        const targetDateNormalized = new Date(currentDate);
+        targetDateNormalized.setHours(0, 0, 0, 0);
+        
+        // Filtra hábitos do grupo que foram criados antes ou no mesmo dia da data atual
+        const filteredHabits = habits.filter((h) => {
+          if (h.groupId !== groupId) return false;
+          
+          const createdAt = h.createdAt instanceof Date 
+            ? h.createdAt 
+            : new Date(h.createdAt);
+          const createdAtNormalized = new Date(createdAt);
+          createdAtNormalized.setHours(0, 0, 0, 0);
+          
+          // Hábito só aparece se foi criado antes ou no mesmo dia da data atual
+          if (createdAtNormalized > targetDateNormalized) {
+            return false;
+          }
+
+          // Se é esporádico, verifica se a data está dentro do período
+          if (h.isSporadic && h.sporadicStartDate && h.sporadicEndDate) {
+            const startDate = h.sporadicStartDate instanceof Date
+              ? h.sporadicStartDate
+              : new Date(h.sporadicStartDate);
+            const endDate = h.sporadicEndDate instanceof Date
+              ? h.sporadicEndDate
+              : new Date(h.sporadicEndDate);
+            
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            
+            return targetDateNormalized >= startDate && targetDateNormalized <= endDate;
+          }
+
+          return true;
+        });
+        
+        return filteredHabits
           .sort((a, b) => a.order - b.order)
           .map((habit) =>
             combineHabitWithProgress(habit, progress, currentDate)
@@ -757,10 +939,16 @@ export const useHabitsStore = create<HabitsState>()(
           completedAt: p.completedAt ? new Date(p.completedAt) : undefined,
         }));
 
+        // Adiciona createdAt aos grupos (usa a data do primeiro hábito ou hoje para grupos antigos)
+        const groups = (mockData.groups || []).map((g: any) => ({
+          ...g,
+          createdAt: g.createdAt ? new Date(g.createdAt) : new Date(), // Fallback para grupos antigos
+        }));
+
         set({
           habits,
           progress,
-          groups: mockData.groups || [],
+          groups,
           skipAutoLoad: false, // Reseta a flag ao carregar dados manualmente
         });
 
@@ -789,10 +977,35 @@ export const useHabitsStore = create<HabitsState>()(
           ...g,
           createdAt:
             g.createdAt instanceof Date ? g.createdAt : new Date(g.createdAt),
+          sporadicStartDate: g.sporadicStartDate
+            ? g.sporadicStartDate instanceof Date
+              ? g.sporadicStartDate
+              : new Date(g.sporadicStartDate)
+            : undefined,
+          sporadicEndDate: g.sporadicEndDate
+            ? g.sporadicEndDate instanceof Date
+              ? g.sporadicEndDate
+              : new Date(g.sporadicEndDate)
+            : undefined,
+        }));
+
+        // Converte datas de período esporádico dos hábitos importados
+        const habitsWithSporadicDates = habits.map((h: any) => ({
+          ...h,
+          sporadicStartDate: h.sporadicStartDate
+            ? h.sporadicStartDate instanceof Date
+              ? h.sporadicStartDate
+              : new Date(h.sporadicStartDate)
+            : undefined,
+          sporadicEndDate: h.sporadicEndDate
+            ? h.sporadicEndDate instanceof Date
+              ? h.sporadicEndDate
+              : new Date(h.sporadicEndDate)
+            : undefined,
         }));
 
         set({
-          habits,
+          habits: habitsWithSporadicDates,
           progress,
           groups,
           skipAutoLoad: false, // Reseta a flag ao importar dados
@@ -874,6 +1087,43 @@ export const useHabitsStore = create<HabitsState>()(
                 ? p.completedAt instanceof Date
                   ? p.completedAt
                   : new Date(p.completedAt)
+                : undefined,
+            }));
+
+            // Converte createdAt dos grupos de string para Date
+            state.groups = state.groups.map((g) => ({
+              ...g,
+              createdAt:
+                g.createdAt instanceof Date
+                  ? g.createdAt
+                  : g.createdAt
+                  ? new Date(g.createdAt)
+                  : new Date(), // Fallback para grupos antigos sem createdAt
+              // Converte datas de período esporádico
+              sporadicStartDate: g.sporadicStartDate
+                ? g.sporadicStartDate instanceof Date
+                  ? g.sporadicStartDate
+                  : new Date(g.sporadicStartDate)
+                : undefined,
+              sporadicEndDate: g.sporadicEndDate
+                ? g.sporadicEndDate instanceof Date
+                  ? g.sporadicEndDate
+                  : new Date(g.sporadicEndDate)
+                : undefined,
+            }));
+
+            // Converte datas de período esporádico dos hábitos
+            state.habits = state.habits.map((h) => ({
+              ...h,
+              sporadicStartDate: h.sporadicStartDate
+                ? h.sporadicStartDate instanceof Date
+                  ? h.sporadicStartDate
+                  : new Date(h.sporadicStartDate)
+                : undefined,
+              sporadicEndDate: h.sporadicEndDate
+                ? h.sporadicEndDate instanceof Date
+                  ? h.sporadicEndDate
+                  : new Date(h.sporadicEndDate)
                 : undefined,
             }));
           } catch (error) {

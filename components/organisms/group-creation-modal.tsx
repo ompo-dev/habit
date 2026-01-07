@@ -13,6 +13,7 @@ import { useModalWithCleanup } from "@/lib/hooks/use-modal";
 import { IconPicker } from "@/components/molecules/icon-picker";
 import { ColorPicker } from "@/components/molecules/color-picker";
 import { PreviewCard } from "@/components/molecules/preview-card";
+import { PeriodSelector } from "@/components/molecules/period-selector";
 import type { GroupTemplate } from "@/lib/utils/group-templates";
 
 // Lista de ícones populares do Lucide
@@ -75,6 +76,11 @@ export function GroupCreationModal() {
   const [name, setName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("Target");
   const [selectedColor, setSelectedColor] = useState("#3b82f6");
+  // Estados para período esporádico
+  const [isSporadic, setIsSporadic] = useState(false);
+  const [sporadicType, setSporadicType] = useState<"day" | "week" | "month">("day");
+  const [sporadicStartDate, setSporadicStartDate] = useState<Date | undefined>(new Date());
+  const [sporadicEndDate, setSporadicEndDate] = useState<Date | undefined>(new Date());
   const isMountedRef = useRef(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
@@ -95,6 +101,11 @@ export function GroupCreationModal() {
           setName(group.name);
           setSelectedIcon(group.icon);
           setSelectedColor(group.color);
+          // Carrega dados de período esporádico
+          setIsSporadic(group.isSporadic || false);
+          setSporadicType(group.sporadicType || "day");
+          setSporadicStartDate(group.sporadicStartDate || new Date());
+          setSporadicEndDate(group.sporadicEndDate || new Date());
         }
       } else {
         // Tenta carregar template do sessionStorage
@@ -111,6 +122,12 @@ export function GroupCreationModal() {
           setSelectedIcon("Target");
           setSelectedColor("#3b82f6");
         }
+        
+        // Reset período esporádico
+        setIsSporadic(false);
+        setSporadicType("day");
+        setSporadicStartDate(new Date());
+        setSporadicEndDate(new Date());
       }
     } else {
       // Delay para garantir que o drag termine antes de desmontar
@@ -131,18 +148,26 @@ export function GroupCreationModal() {
   );
 
   const handleSave = async () => {
-    if (editingGroupId) {
-      await updateGroup(editingGroupId, {
-        name,
-        icon: selectedIcon,
-        color: selectedColor,
-      });
+    const groupData: any = {
+      name,
+      icon: selectedIcon,
+      color: selectedColor,
+    };
+
+    // Adiciona dados de período esporádico se for esporádico
+    if (isSporadic && sporadicStartDate && sporadicEndDate) {
+      groupData.isSporadic = true;
+      groupData.sporadicType = sporadicType;
+      groupData.sporadicStartDate = sporadicStartDate;
+      groupData.sporadicEndDate = sporadicEndDate;
     } else {
-      await addGroup({
-        name,
-        icon: selectedIcon,
-        color: selectedColor,
-      });
+      groupData.isSporadic = false;
+    }
+
+    if (editingGroupId) {
+      await updateGroup(editingGroupId, groupData);
+    } else {
+      await addGroup(groupData);
     }
     handleCloseWithCleanup();
   };
@@ -326,6 +351,22 @@ export function GroupCreationModal() {
                       typeof color === "string" ? color : color.primary
                     )
                   }
+                />
+              </div>
+
+              {/* Período Esporádico */}
+              <div className="mb-6">
+                <PeriodSelector
+                  isSporadic={isSporadic}
+                  sporadicType={sporadicType}
+                  sporadicStartDate={sporadicStartDate}
+                  sporadicEndDate={sporadicEndDate}
+                  onSporadicChange={setIsSporadic}
+                  onTypeChange={setSporadicType}
+                  onDatesChange={(start, end) => {
+                    setSporadicStartDate(start);
+                    setSporadicEndDate(end);
+                  }}
                 />
               </div>
 

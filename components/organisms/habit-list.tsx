@@ -21,7 +21,7 @@ export const HabitList = function HabitList() {
   const {
     getHabitsWithProgress,
     getHabitsByGroup,
-    groups,
+    getGroupsForDate,
     markComplete,
     undoComplete,
     deleteGroup,
@@ -66,7 +66,7 @@ export const HabitList = function HabitList() {
 
   // Obtém dados diretamente do store - Zustand notifica automaticamente quando mudam
   const allHabits = isHydrated ? getHabitsWithProgress(selectedDate) : [];
-  const hydratedGroups = isHydrated ? groups : [];
+  const hydratedGroups = isHydrated ? getGroupsForDate(selectedDate) : [];
 
   // Memoiza ungroupedHabits para evitar recálculos desnecessários
   const ungroupedHabits = useMemo(
